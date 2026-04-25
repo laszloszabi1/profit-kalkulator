@@ -107,6 +107,124 @@
     padding: 4px 10px; border-radius: 6px; margin-right: 10px;
   }
   .export:hover { background: #1f2e25; border-color: #4ade80; }
+  .save-btn {
+    float: right; font-size: 12px; font-family: inherit; cursor: pointer;
+    background: #1f2530; color: #ffd66b; border: 1px solid #3d3a25;
+    padding: 4px 10px; border-radius: 6px; margin-right: 10px;
+  }
+  .save-btn:hover { background: #2a2f3d; border-color: #ffd66b; }
+
+  /* ===== MENTETT TERMÉKEK (chip lista) ===== */
+  .saves-card {
+    background: #14181f; border: 1px solid #252a33;
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;
+  }
+  .saves-head {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: #8a8f98; font-weight: 600; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .saves-count { color: #ffd66b; font-weight: 700; }
+  .saves-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .saves-empty { color: #5a6069; font-size: 12px; font-style: italic; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #1a2027; border: 1px solid #2d333e;
+    color: #e6e8eb; font-family: inherit; font-size: 13px;
+    padding: 7px 10px 7px 12px; border-radius: 18px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .chip:hover { border-color: #4a5260; background: #1f2630; }
+  .chip.chip-active { border-color: #ffd66b; background: #1f2530; }
+  .chip-name { font-weight: 600; }
+  .chip-date { color: #8a8f98; font-size: 11px; }
+  .chip-x {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    color: #8a8f98; font-size: 14px; margin-left: 2px;
+  }
+  .chip-x:hover { background: #2d2024; color: #f87171; }
+
+  /* ===== MODAL (CSV export) ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(8, 10, 14, 0.78); z-index: 1000;
+    align-items: flex-start; justify-content: center;
+    padding: 40px 20px; overflow-y: auto;
+  }
+  .modal-overlay.modal-open { display: flex; }
+  .modal {
+    background: #171a21; border: 1px solid #2d333e;
+    border-radius: 12px; padding: 20px;
+    max-width: 1000px; width: 100%; max-height: calc(100vh - 80px);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .modal-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 15px; font-weight: 600;
+    border-bottom: 1px solid #252a33; padding-bottom: 10px;
+  }
+  .modal-close {
+    background: none; border: 0; color: #8a8f98;
+    font-size: 24px; cursor: pointer; padding: 0 6px;
+    font-family: inherit; line-height: 1;
+  }
+  .modal-close:hover { color: #e6e8eb; }
+  .modal-body {
+    overflow: auto; flex: 1;
+    background: #0f1115; border: 1px solid #252a33;
+    border-radius: 8px;
+  }
+  .modal-empty { padding: 30px; text-align: center; color: #8a8f98; font-size: 14px; }
+  .modal-empty small { color: #5a6069; font-size: 12px; display: block; margin-top: 6px; }
+  .export-table {
+    width: 100%; border-collapse: collapse;
+    font-variant-numeric: tabular-nums; font-size: 13px;
+  }
+  .export-table th {
+    text-align: left; padding: 10px 12px; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    color: #8a8f98; font-weight: 600; white-space: nowrap;
+    background: #14181f; position: sticky; top: 0;
+    border-bottom: 1px solid #252a33;
+  }
+  .export-table td {
+    padding: 8px 12px; border-bottom: 1px dashed #1f242c;
+    white-space: nowrap; color: #e6e8eb;
+  }
+  .export-table tr:last-child td { border-bottom: 0; }
+  .export-table tr:hover td { background: #1a1f27; }
+  .modal-actions {
+    display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+  }
+  .btn-primary, .btn-secondary {
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    padding: 9px 16px; border-radius: 7px; cursor: pointer;
+  }
+  .btn-primary {
+    background: #ffd66b; color: #0f1115; border: 1px solid #ffd66b;
+  }
+  .btn-primary:hover { background: #ffe28c; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    background: #1a2027; color: #4ade80; border: 1px solid #2d4a38;
+  }
+  .btn-secondary:hover { background: #1f2e25; border-color: #4ade80; }
+  .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a2027; color: #e6e8eb; border: 1px solid #ffd66b;
+    padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 1100;
+  }
+  .toast.toast-show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
 
   /* ===== MOBIL ===== */
   @media (max-width: 720px) {
@@ -125,6 +243,15 @@
     .out { padding: 10px 0; flex-wrap: wrap; }
     .out .k { font-size: 12px; }
     .out small { display: block; font-size: 10px; }
+    .saves-row { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+    .saves-row::-webkit-scrollbar { height: 4px; }
+    .saves-row::-webkit-scrollbar-thumb { background: #2d333e; border-radius: 2px; }
+    .chip { flex-shrink: 0; font-size: 12px; padding: 6px 8px 6px 10px; }
+    .modal-overlay { padding: 12px; }
+    .modal { padding: 14px; max-height: calc(100vh - 24px); border-radius: 10px; }
+    .modal-head { font-size: 14px; }
+    .export-table { font-size: 11px; }
+    .export-table th, .export-table td { padding: 7px 8px; }
   }
   @media (max-width: 480px) {
     body { padding: 10px; }
@@ -134,12 +261,16 @@
     .hero { grid-template-columns: 1fr; }
     .hero .v { font-size: 24px; }
     h1 { font-size: 18px; }
-    .reset, .export { float: none; display: inline-block; margin-top: 6px; }
-    .export { margin-right: 6px; }
+    .reset, .export, .save-btn { float: none; display: inline-block; margin-top: 6px; }
+    .export, .save-btn { margin-right: 6px; }
+    .save-btn { font-size: 11px; padding: 4px 8px; }
     table.scen th { font-size: 10px; padding-bottom: 8px; }
     table.scen td { font-size: 12px; padding: 6px 0; }
     table.scen td:first-child { font-size: 11px; }
     table.scen tr.total td { font-size: 13px; padding-top: 10px; }
+    .modal-actions { flex-direction: column; align-items: stretch; }
+    .btn-primary, .btn-secondary { width: 100%; padding: 11px 14px; }
+    .saves-card { padding: 12px 14px; }
   }
 </style>
 </head>
@@ -158,8 +289,19 @@
   <!-- ========== PANEL 1: PROFIT KALKULÁTOR ========== -->
   <div id="p_kalk" class="panel active">
 
-  <h1>💰 Profit kalkulátor <button class="reset" onclick="resetKalk()">reset</button></h1>
+  <h1>💰 Profit kalkulátor
+    <button class="reset" onclick="resetKalk()">reset</button>
+    <button class="export" onclick="openExportModal('kalk')">⬇ export</button>
+    <button class="save-btn" onclick="addSave('kalk')">💾 mentés</button>
+  </h1>
   <div class="sub">ecomm + COD logisztika + FB Ads · szimulátor</div>
+
+  <div class="saves-card">
+    <div class="saves-head">📁 Mentett termékek <span class="saves-count" id="saves_count_kalk">(0)</span></div>
+    <div class="saves-row" id="saves_kalk">
+      <span class="saves-empty">Még nincs mentés — nyomd meg a 💾 gombot</span>
+    </div>
+  </div>
 
   <div class="grid">
 
@@ -283,9 +425,18 @@
 
   <h1>🧪 Termékvalidáló
     <button class="reset" onclick="resetValid()">reset</button>
-    <button class="export" onclick="exportValid()">⬇ export .md</button>
+    <button class="export" onclick="exportValid()">⬇ MD</button>
+    <button class="export" onclick="openExportModal('valid')">⬇ CSV</button>
+    <button class="save-btn" onclick="addSave('valid')">💾 mentés</button>
   </h1>
   <div class="sub">Valós teszt-adataid → tényleges szám. Írd be, amit eddig mértél a termékkel</div>
+
+  <div class="saves-card">
+    <div class="saves-head">📁 Mentett termékek <span class="saves-count" id="saves_count_valid">(0)</span></div>
+    <div class="saves-row" id="saves_valid">
+      <span class="saves-empty">Még nincs mentés — nyomd meg a 💾 gombot</span>
+    </div>
+  </div>
 
   <div class="grid">
 
@@ -432,7 +583,331 @@
 
 </div>
 
+<!-- Export modal -->
+<div class="modal-overlay" id="modal_overlay" onclick="closeExportModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <span id="modal_title">Export</span>
+      <button class="modal-close" onclick="closeExportModal()" aria-label="Bezárás">×</button>
+    </div>
+    <div class="modal-body" id="modal_body"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="btn_download" onclick="downloadCSV()">⬇ CSV letöltés</button>
+      <button class="btn-primary" id="btn_copy" onclick="copyCSV()">📋 Másolás vágólapra</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
+  /* ===== STORAGE & SAVES ===== */
+  const SK = {
+    kalk:  { saves: 'pk_saves_kalk',  auto: 'pk_autosave_kalk'  },
+    valid: { saves: 'pk_saves_valid', auto: 'pk_autosave_valid' }
+  };
+  const FIELDS = {
+    kalk:  ['beszerzes','eladas','szallitas','csomag','retrate','cpa','rendel','fix'],
+    valid: ['v_rendel','v_vissza','v_delivered','v_adspend','v_beszerzes','v_units','v_aov','v_szallitas','v_csomag']
+  };
+  const _activeSave = { kalk: null, valid: null };
+  let _exportPanel = null;
+  let _exportCSV = '';
+
+  function loadSaves(panel) {
+    try { return JSON.parse(localStorage.getItem(SK[panel].saves) || '[]'); }
+    catch (e) { return []; }
+  }
+  function persistSaves(panel, arr) {
+    localStorage.setItem(SK[panel].saves, JSON.stringify(arr));
+  }
+  function loadAutosave(panel) {
+    try { return JSON.parse(localStorage.getItem(SK[panel].auto) || 'null'); }
+    catch (e) { return null; }
+  }
+  function persistAutosave(panel) {
+    const values = {};
+    FIELDS[panel].forEach(id => values[id] = document.getElementById(id).value);
+    localStorage.setItem(SK[panel].auto, JSON.stringify({ values, cur: CUR }));
+  }
+
+  function nowStamp() {
+    const d = new Date();
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  function shortDate(iso) { return (iso || '').slice(5, 10); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function applyValuesToInputs(panel, values, cur) {
+    if (cur && cur !== CUR) {
+      CUR = cur;
+      document.querySelectorAll('.cur').forEach(b => b.classList.toggle('active', b.dataset.cur === CUR));
+    }
+    FIELDS[panel].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && values[id] !== undefined) el.value = values[id];
+    });
+    if (panel === 'kalk') {
+      [['beszerzes','beszerzes_s'],['eladas','eladas_s'],['retrate','retrate_s'],['cpa','cpa_s'],['rendel','rendel_s']].forEach(([a,b]) => {
+        document.getElementById(b).value = document.getElementById(a).value;
+      });
+      calc();
+    } else {
+      calcValid();
+    }
+    persistAutosave(panel);
+  }
+
+  function addSave(panel) {
+    const stamp = nowStamp();
+    const raw = prompt('Mentés neve:', stamp);
+    if (raw === null) return;
+    const name = raw.trim() || stamp;
+    const values = {};
+    FIELDS[panel].forEach(id => values[id] = document.getElementById(id).value);
+    const save = { id: String(Date.now()), name, date: stamp, cur: CUR, values };
+    const arr = loadSaves(panel);
+    arr.push(save);
+    persistSaves(panel, arr);
+    _activeSave[panel] = save.id;
+    renderSavesList(panel);
+    showToast('💾 Elmentve: ' + name);
+  }
+
+  function deleteSave(panel, id) {
+    const arr = loadSaves(panel);
+    const s = arr.find(x => x.id === id);
+    if (!s) return;
+    if (!confirm(`Törlöd? "${s.name}"`)) return;
+    persistSaves(panel, arr.filter(x => x.id !== id));
+    if (_activeSave[panel] === id) _activeSave[panel] = null;
+    renderSavesList(panel);
+    showToast('🗑 Törölve: ' + s.name);
+  }
+
+  function loadSaveById(panel, id) {
+    const s = loadSaves(panel).find(x => x.id === id);
+    if (!s) return;
+    _activeSave[panel] = id;
+    applyValuesToInputs(panel, s.values, s.cur);
+    renderSavesList(panel);
+    showToast('🔄 Betöltve: ' + s.name);
+  }
+
+  function renderSavesList(panel) {
+    const arr = loadSaves(panel);
+    const c = document.getElementById('saves_' + panel);
+    const cnt = document.getElementById('saves_count_' + panel);
+    if (cnt) cnt.textContent = '(' + arr.length + ')';
+    if (!arr.length) {
+      c.innerHTML = '<span class="saves-empty">Még nincs mentés — nyomd meg a 💾 gombot</span>';
+      return;
+    }
+    // legújabb először
+    const sorted = [...arr].sort((a, b) => Number(b.id) - Number(a.id));
+    c.innerHTML = sorted.map(s => {
+      const active = _activeSave[panel] === s.id ? ' chip-active' : '';
+      return `<button class="chip${active}" data-id="${s.id}" onclick="loadSaveById('${panel}', '${s.id}')" title="${escapeHtml(s.date)} · ${escapeHtml(s.cur || '')}">
+        <span class="chip-name">${escapeHtml(s.name)}</span>
+        <span class="chip-date">${escapeHtml(shortDate(s.date))}</span>
+        <span class="chip-x" onclick="event.stopPropagation(); deleteSave('${panel}', '${s.id}')" title="Törlés">×</span>
+      </button>`;
+    }).join('');
+  }
+
+  /* ===== TOAST ===== */
+  let _toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('toast-show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('toast-show'), 1800);
+  }
+
+  /* ===== CSV EXPORT MODAL ===== */
+  function openExportModal(panel) {
+    _exportPanel = panel;
+    const arr = loadSaves(panel);
+    const body = document.getElementById('modal_body');
+    const titleSuffix = panel === 'kalk' ? 'Profit kalkulátor' : 'Termékvalidáló';
+    document.getElementById('modal_title').textContent = `Export — ${titleSuffix} (${arr.length} mentés)`;
+
+    if (!arr.length) {
+      body.innerHTML = '<div class="modal-empty">Még nincs mentett termék ezen a panelen.<small>Mentsd el az aktuális beállításokat a 💾 gombbal.</small></div>';
+      _exportCSV = '';
+      document.getElementById('btn_copy').disabled = true;
+      document.getElementById('btn_download').disabled = true;
+    } else {
+      const sorted = [...arr].sort((a, b) => Number(b.id) - Number(a.id));
+      const { headers, rows } = buildExportRows(panel, sorted);
+      let html = '<table class="export-table"><thead><tr>';
+      headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
+      html += '</tr></thead><tbody>';
+      rows.forEach(row => {
+        html += '<tr>';
+        row.forEach(c => html += `<td>${escapeHtml(String(c))}</td>`);
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      body.innerHTML = html;
+      _exportCSV = rowsToCSV(headers, rows);
+      document.getElementById('btn_copy').disabled = false;
+      document.getElementById('btn_download').disabled = false;
+    }
+    document.getElementById('modal_overlay').classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeExportModal(e) {
+    if (e && e.target && !e.target.classList.contains('modal-overlay') && !e.target.classList.contains('modal-close')) return;
+    document.getElementById('modal_overlay').classList.remove('modal-open');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('modal_overlay').classList.contains('modal-open')) {
+      closeExportModal();
+    }
+  });
+
+  function buildExportRows(panel, arr) {
+    if (panel === 'kalk') {
+      const headers = ['Név','Dátum','Valuta','Beszerzés','Eladás','Szállítás','Csomag','Return rate %','CPA','Havi rendelés','Fix költség','Profit/sikeres','Margin %','Havi profit','POAS','ROAS','Verdikt'];
+      const rows = arr.map(s => {
+        const v = s.values, r = recomputeKalk(v);
+        return [
+          s.name, s.date, s.cur,
+          v.beszerzes, v.eladas, v.szallitas, v.csomag, v.retrate, v.cpa, v.rendel, v.fix,
+          r.sikerProfit.toFixed(2), r.margin.toFixed(1) + '%', r.havi_profit.toFixed(2),
+          r.POAS.toFixed(2) + '×', r.ROAS.toFixed(2) + '×', r.verdikt
+        ];
+      });
+      return { headers, rows };
+    }
+    const headers = ['Név','Dátum','Valuta','Összes rendelés','Vissza','Delivered','Ad spend','Beszerzés','Units/order','AOV','Szállítás','Csomag','Return rate B %','Tényleges CPA','Profit (B)','POAS (B)','Margin (B) %','Verdikt'];
+    const rows = arr.map(s => {
+      const v = s.values, r = recomputeValid(v);
+      return [
+        s.name, s.date, s.cur,
+        v.v_rendel, v.v_vissza, v.v_delivered, v.v_adspend, v.v_beszerzes, v.v_units, v.v_aov, v.v_szallitas, v.v_csomag,
+        r.rB_pct.toFixed(1) + '%', r.cpa_all.toFixed(2),
+        r.profit_B.toFixed(2), r.POAS_B.toFixed(2) + '×', r.margin_B.toFixed(1) + '%', r.verdikt
+      ];
+    });
+    return { headers, rows };
+  }
+
+  function recomputeKalk(v) {
+    const beszerzes = +v.beszerzes||0, eladas = +v.eladas||0, szallitas = +v.szallitas||0,
+          csomag = +v.csomag||0, retrate = (+v.retrate||0)/100, cpa = +v.cpa||0,
+          rendel = +v.rendel||0, fix = +v.fix||0;
+    const sikerProfit = eladas - beszerzes - szallitas - csomag - cpa;
+    const margin = eladas > 0 ? (sikerProfit / eladas) * 100 : 0;
+    const siker_db = rendel * (1 - retrate);
+    const adspend = rendel * cpa;
+    const bevetel = siker_db * eladas;
+    const koltseg = rendel * beszerzes * (1 - retrate) + rendel * (szallitas + csomag) + adspend + fix;
+    const havi_profit = bevetel - koltseg;
+    const POAS = adspend > 0 ? havi_profit / adspend : 0;
+    const ROAS = adspend > 0 ? bevetel / adspend : 0;
+    let verdikt;
+    if (havi_profit <= 0) verdikt = '❌ vesztes';
+    else if (POAS < 1.5) verdikt = '⚠️ vékony margin';
+    else if (POAS < 2) verdikt = '✅ profitábilis';
+    else verdikt = '🚀 erős profit';
+    return { sikerProfit, margin, havi_profit, POAS, ROAS, verdikt };
+  }
+
+  function recomputeValid(v) {
+    const rendel = +v.v_rendel||0;
+    const vissza = Math.min(+v.v_vissza||0, rendel);
+    const delivered_i = Math.min(+v.v_delivered||0, Math.max(0, rendel - vissza));
+    const adspend = +v.v_adspend||0;
+    const beszerzes = +v.v_beszerzes||0;
+    const units = +v.v_units||0;
+    const aov = +v.v_aov||0;
+    const szallitas = +v.v_szallitas||0;
+    const csomag = +v.v_csomag||0;
+    const resolved = vissza + delivered_i;
+    const rate_B = resolved > 0 ? vissza / resolved : 0;
+    const cpa_all = rendel > 0 ? adspend / rendel : 0;
+    const cogs_per_kosar = beszerzes * units;
+    const logi_tot = rendel * (szallitas + csomag);
+    const siker_B = rendel * (1 - rate_B);
+    const bev_B = siker_B * aov;
+    const cogs_B = siker_B * cogs_per_kosar;
+    const profit_B = bev_B - (cogs_B + logi_tot + adspend);
+    const POAS_B = adspend > 0 ? profit_B / adspend : 0;
+    const margin_B = bev_B > 0 ? (profit_B / bev_B) * 100 : 0;
+    let verdikt;
+    if (rendel < 10) verdikt = '⏳ kevés adat';
+    else if (resolved < 5) verdikt = '⏳ várj a lezárásra';
+    else if (profit_B > 0 && POAS_B >= 1.5) verdikt = '🚀 skálázható';
+    else if (profit_B > 0) verdikt = '✅ nyerő';
+    else verdikt = '❌ bukó';
+    return { rB_pct: rate_B*100, cpa_all, profit_B, POAS_B, margin_B, verdikt };
+  }
+
+  function rowsToCSV(headers, rows) {
+    const esc = c => '"' + String(c).replace(/"/g, '""') + '"';
+    const lines = [headers.map(esc).join(',')];
+    rows.forEach(r => lines.push(r.map(esc).join(',')));
+    return '﻿' + lines.join('\r\n');
+  }
+
+  function copyCSV() {
+    if (!_exportCSV) return;
+    const fallback = () => {
+      const ta = document.createElement('textarea');
+      ta.value = _exportCSV;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      showToast('📋 Másolva ✓');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(_exportCSV).then(() => showToast('📋 Másolva ✓')).catch(fallback);
+    } else { fallback(); }
+  }
+
+  function downloadCSV() {
+    if (!_exportCSV) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const fname = `profit-${_exportPanel === 'kalk' ? 'kalkulator' : 'validalo'}-${today}.csv`;
+    const blob = new Blob([_exportCSV], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function restoreAutosave(panel) {
+    const data = loadAutosave(panel);
+    if (!data) return;
+    if (data.cur && data.cur !== CUR) {
+      CUR = data.cur;
+      document.querySelectorAll('.cur').forEach(b => b.classList.toggle('active', b.dataset.cur === CUR));
+    }
+    if (data.values) {
+      FIELDS[panel].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && data.values[id] !== undefined) el.value = data.values[id];
+      });
+      if (panel === 'kalk') {
+        [['beszerzes','beszerzes_s'],['eladas','eladas_s'],['retrate','retrate_s'],['cpa','cpa_s'],['rendel','rendel_s']].forEach(([a,b]) => {
+          document.getElementById(b).value = document.getElementById(a).value;
+        });
+      }
+    }
+  }
+
   let CUR = 'RON';
   const F = (v) => {
     if (!isFinite(v)) return '—';
@@ -459,6 +934,8 @@
       CUR = btn.dataset.cur;
       calc();
       calcValid();
+      persistAutosave('kalk');
+      persistAutosave('valid');
     });
   });
 
@@ -471,6 +948,9 @@
   }
   pairs.forEach(([a,b]) => sync(a,b));
   ['szallitas','csomag','fix'].forEach(id => document.getElementById(id).addEventListener('input', calc));
+  // auto-save hook (kalk panel — minden input + slider)
+  FIELDS.kalk.forEach(id => document.getElementById(id).addEventListener('input', () => persistAutosave('kalk')));
+  pairs.forEach(([a,b]) => document.getElementById(b).addEventListener('input', () => persistAutosave('kalk')));
 
   function calc() {
     const beszerzes = +document.getElementById('beszerzes').value || 0;
@@ -572,6 +1052,8 @@
   let _vState = null;
   const vIds = ['v_rendel','v_vissza','v_delivered','v_adspend','v_beszerzes','v_units','v_aov','v_szallitas','v_csomag'];
   vIds.forEach(id => document.getElementById(id).addEventListener('input', calcValid));
+  // auto-save hook (valid panel)
+  FIELDS.valid.forEach(id => document.getElementById(id).addEventListener('input', () => persistAutosave('valid')));
 
   function calcValid() {
     const rendel      = +document.getElementById('v_rendel').value      || 0;
@@ -859,8 +1341,13 @@ Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapj
     calcValid();
   }
 
+  // Page-load: restore autosave first → then calc → then render saves lists
+  restoreAutosave('kalk');
+  restoreAutosave('valid');
   calc();
   calcValid();
+  renderSavesList('kalk');
+  renderSavesList('valid');
 </script>
 </body>
 </html>
