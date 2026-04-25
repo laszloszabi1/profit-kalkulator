@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Profit kalkulátor + Termékvalidáló — ecomm + COD + FB Ads</title>
+<style>
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0f1115; color: #e6e8eb;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 8px; font-size: 22px; font-weight: 600; }
+  .sub { color: #8a8f98; font-size: 13px; margin-bottom: 24px; }
+
+  /* TABS */
+  .tabs {
+    display: flex; align-items: center; gap: 4px; margin-bottom: 20px;
+    border-bottom: 1px solid #252a33;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 10px 18px; font-size: 14px; font-weight: 600;
+    background: none; border: 0; color: #8a8f98; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    font-family: inherit;
+  }
+  .tab:hover { color: #e6e8eb; }
+  .tab.active { color: #ffd66b; border-bottom-color: #ffd66b; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* CURRENCY SWITCH */
+  .cur-switch {
+    margin-left: auto; margin-bottom: 8px;
+    display: flex; gap: 2px; padding: 3px;
+    background: #0f1115; border: 1px solid #252a33;
+    border-radius: 7px;
+  }
+  .cur {
+    padding: 5px 12px; font-size: 12px; font-weight: 600;
+    background: none; border: 0; color: #8a8f98; cursor: pointer;
+    border-radius: 4px; font-family: inherit; letter-spacing: 0.04em;
+  }
+  .cur:hover { color: #e6e8eb; }
+  .cur.active { background: #ffd66b; color: #0f1115; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: #171a21; border: 1px solid #252a33;
+    border-radius: 10px; padding: 20px;
+  }
+  .card h2 {
+    margin: 0 0 14px; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.06em; color: #8a8f98; font-weight: 600;
+  }
+  label { display: block; margin-bottom: 14px; }
+  label .lbl { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; gap: 8px; }
+  label .lbl span.val { color: #ffd66b; font-variant-numeric: tabular-nums; }
+  input[type="number"] {
+    width: 100%; padding: 10px 12px; font-size: 16px;
+    background: #0f1115; border: 1px solid #2d333e; color: #e6e8eb;
+    border-radius: 6px; font-variant-numeric: tabular-nums;
+    -webkit-appearance: none; appearance: none;
+  }
+  input[type="number"]:focus { outline: none; border-color: #ffd66b; }
+  input[type="range"] { width: 100%; margin-top: 8px; accent-color: #ffd66b; height: 28px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  table.scen { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  table.scen th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #8a8f98; font-weight: 600; text-align: right; padding-bottom: 10px; border-bottom: 1px solid #252a33; }
+  table.scen th:first-child { text-align: left; }
+  table.scen td { padding: 8px 0; border-bottom: 1px dashed #252a33; font-size: 14px; font-weight: 600; text-align: right; }
+  table.scen td:first-child { color: #8a8f98; font-size: 13px; font-weight: 400; text-align: left; }
+  table.scen tr.total td { font-weight: 700; padding-top: 14px; font-size: 16px; border-bottom-style: solid; }
+  table.scen tr:last-child td { border-bottom: 0; }
+  table.scen .good { color: #4ade80; }
+  table.scen .bad { color: #f87171; }
+  table.scen .neutral { color: #ffd66b; }
+  .out { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #252a33; font-variant-numeric: tabular-nums; }
+  .out:last-child { border: 0; }
+  .out .k { color: #8a8f98; font-size: 13px; }
+  .out .v { font-weight: 600; }
+  .hero {
+    background: #1a2027; border: 1px solid #2d333e;
+    border-radius: 10px; padding: 18px; margin-top: 16px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .hero .k { font-size: 12px; color: #8a8f98; text-transform: uppercase; letter-spacing: 0.05em; }
+  .hero .v { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .good { color: #4ade80; }
+  .bad { color: #f87171; }
+  .neutral { color: #ffd66b; }
+  .hint { color: #8a8f98; font-size: 12px; margin-top: 6px; font-style: italic; }
+  footer { color: #5a6069; font-size: 12px; margin-top: 28px; text-align: center; }
+  .reset { float: right; font-size: 12px; color: #8a8f98; background: none; border: 0; cursor: pointer; font-family: inherit; }
+  .reset:hover { color: #ffd66b; }
+  .export {
+    float: right; font-size: 12px; font-family: inherit; cursor: pointer;
+    background: #1a2027; color: #4ade80; border: 1px solid #2d4a38;
+    padding: 4px 10px; border-radius: 6px; margin-right: 10px;
+  }
+  .export:hover { background: #1f2e25; border-color: #4ade80; }
+
+  /* ===== MOBIL ===== */
+  @media (max-width: 720px) {
+    body { padding: 14px; }
+    h1 { font-size: 20px; }
+    .sub { font-size: 12px; margin-bottom: 18px; }
+    .tabs { gap: 0; }
+    .tab { padding: 10px 12px; font-size: 13px; flex: 1; text-align: center; }
+    .cur-switch { width: 100%; margin-left: 0; margin-top: 8px; justify-content: center; }
+    .cur { flex: 1; padding: 8px 12px; }
+    .card { padding: 16px; }
+    .hero { grid-template-columns: 1fr 1fr; padding: 14px; gap: 12px; }
+    .hero .v { font-size: 22px; }
+    table.scen th, table.scen td { font-size: 12px; }
+    table.scen tr.total td { font-size: 14px; }
+    .out { padding: 10px 0; flex-wrap: wrap; }
+    .out .k { font-size: 12px; }
+    .out small { display: block; font-size: 10px; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 10px; }
+    .row { grid-template-columns: 1fr; gap: 0; }
+    .row3 { grid-template-columns: 1fr; gap: 0; }
+    .card { padding: 14px; border-radius: 8px; }
+    .hero { grid-template-columns: 1fr; }
+    .hero .v { font-size: 24px; }
+    h1 { font-size: 18px; }
+    .reset, .export { float: none; display: inline-block; margin-top: 6px; }
+    .export { margin-right: 6px; }
+    table.scen th { font-size: 10px; padding-bottom: 8px; }
+    table.scen td { font-size: 12px; padding: 6px 0; }
+    table.scen td:first-child { font-size: 11px; }
+    table.scen tr.total td { font-size: 13px; padding-top: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="tabs">
+    <button class="tab active" data-panel="p_kalk">💰 Profit kalkulátor</button>
+    <button class="tab" data-panel="p_valid">🧪 Termékvalidáló</button>
+    <div class="cur-switch" title="Valuta — csak a címke változik, a számokat kézzel írd át">
+      <button class="cur active" data-cur="RON">RON</button>
+      <button class="cur" data-cur="Ft">Ft</button>
+    </div>
+  </div>
+
+  <!-- ========== PANEL 1: PROFIT KALKULÁTOR ========== -->
+  <div id="p_kalk" class="panel active">
+
+  <h1>💰 Profit kalkulátor <button class="reset" onclick="resetKalk()">reset</button></h1>
+  <div class="sub">ecomm + COD logisztika + FB Ads · szimulátor</div>
+
+  <div class="grid">
+
+    <!-- BAL: INPUTS -->
+    <div>
+      <div class="card">
+        <h2>📦 Termék</h2>
+        <div class="row">
+          <label>
+            <div class="lbl"><span>Beszerzési ár</span><span class="val" id="_beszerzes">50</span></div>
+            <input type="number" id="beszerzes" value="50" min="0" />
+            <input type="range" id="beszerzes_s" value="50" min="0" max="500" step="1" />
+          </label>
+          <label>
+            <div class="lbl"><span>Eladási ár</span><span class="val" id="_eladas">199</span></div>
+            <input type="number" id="eladas" value="199" min="0" />
+            <input type="range" id="eladas_s" value="199" min="0" max="1500" step="1" />
+          </label>
+        </div>
+        <div class="row">
+          <label>
+            <div class="lbl"><span>Szállítás (oda-vissza átlag)</span><span class="val" id="_szallitas">25</span></div>
+            <input type="number" id="szallitas" value="25" min="0" />
+          </label>
+          <label>
+            <div class="lbl"><span>Csomagolás + címke</span><span class="val" id="_csomag">5</span></div>
+            <input type="number" id="csomag" value="5" min="0" />
+          </label>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>🚚 COD logisztika</h2>
+        <label>
+          <div class="lbl"><span>Return rate (nem átvett csomag)</span><span class="val"><span id="_retrate">30</span>%</span></div>
+          <input type="number" id="retrate" value="30" min="0" max="100" step="1" />
+          <input type="range" id="retrate_s" value="30" min="0" max="80" step="1" />
+          <div class="hint">RO COD átlag: 20–40%. Ha nincs adat → 30%.</div>
+        </label>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>📣 Facebook Ads</h2>
+        <div class="row">
+          <label>
+            <div class="lbl"><span>CPA (költés / rendelés)</span><span class="val" id="_cpa">35</span></div>
+            <input type="number" id="cpa" value="35" min="0" />
+            <input type="range" id="cpa_s" value="35" min="0" max="200" step="1" />
+          </label>
+          <label>
+            <div class="lbl"><span>Havi rendelés-szám</span><span class="val" id="_rendel">300</span></div>
+            <input type="number" id="rendel" value="300" min="0" />
+            <input type="range" id="rendel_s" value="300" min="0" max="3000" step="10" />
+          </label>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>💼 Fix költségek</h2>
+        <label>
+          <div class="lbl"><span>Havi fix (SRL, Shopify, eszközök, stb.)</span><span class="val" id="_fix">1500</span></div>
+          <input type="number" id="fix" value="1500" min="0" />
+        </label>
+      </div>
+    </div>
+
+    <!-- JOBB: OUTPUTS -->
+    <div>
+      <div class="card">
+        <h2>📊 Kalkulált értékek / rendelés</h2>
+        <div class="out"><span class="k">Profit / sikeres rendelés</span><span class="v" id="o_sikeresprofit">—</span></div>
+        <div class="out"><span class="k">Margin % / sikeres rendelés <small>(profit ÷ eladási ár)</small></span><span class="v" id="o_margin">—</span></div>
+        <div class="out"><span class="k">Markup % / sikeres rendelés <small>(profit ÷ beszerzés)</small></span><span class="v" id="o_markup">—</span></div>
+        <div class="out"><span class="k">Veszteség / visszaküldött rendelés</span><span class="v" id="o_veszteseg">—</span></div>
+        <div class="out"><span class="k">Átlag profit / kiküldött csomag <small>(return-tel)</small></span><span class="v" id="o_atlagprofit">—</span></div>
+        <div class="out"><span class="k">Break-even CPA <small>(ahol profit = 0)</small></span><span class="v" id="o_beven">—</span></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>🎯 Havi eredmény</h2>
+        <div class="out"><span class="k">Sikeres csomagok</span><span class="v" id="o_siker_db">—</span></div>
+        <div class="out"><span class="k">Visszaküldött csomagok</span><span class="v" id="o_vissza_db">—</span></div>
+        <div class="out"><span class="k">Havi FB-költés</span><span class="v" id="o_adspend">—</span></div>
+        <div class="out"><span class="k">Havi bruttó bevétel (sikeres)</span><span class="v" id="o_bevetel">—</span></div>
+        <div class="out"><span class="k">Havi összes költség</span><span class="v" id="o_koltseg">—</span></div>
+        <div class="out"><span class="k">Havi profit-margin <small>(nettó profit ÷ bevétel)</small></span><span class="v" id="o_havimargin">—</span></div>
+      </div>
+
+      <div class="hero">
+        <div>
+          <div class="k">Havi nettó profit</div>
+          <div class="v" id="h_profit">—</div>
+        </div>
+        <div>
+          <div class="k">POAS <small>(profit / ad spend)</small></div>
+          <div class="v" id="h_poas">—</div>
+        </div>
+        <div>
+          <div class="k">ROAS <small>(eladás / ad spend)</small></div>
+          <div class="v neutral" id="h_roas">—</div>
+        </div>
+        <div>
+          <div class="k">Profitábilis?</div>
+          <div class="v" id="h_verdikt">—</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>💡 Mit mondanak a számok</h2>
+        <div id="tanacs" style="font-size:14px;line-height:1.6;color:#c6cbd3">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>POAS &gt; 1 → profitábilis · POAS &lt; 1 → vesztes · POAS 1 — 1.5 → határon · POAS &gt; 2 → erős skálázás</footer>
+  </div>
+
+  <!-- ========== PANEL 2: TERMÉKVALIDÁLÓ ========== -->
+  <div id="p_valid" class="panel">
+
+  <h1>🧪 Termékvalidáló
+    <button class="reset" onclick="resetValid()">reset</button>
+    <button class="export" onclick="exportValid()">⬇ export .md</button>
+  </h1>
+  <div class="sub">Valós teszt-adataid → tényleges szám. Írd be, amit eddig mértél a termékkel</div>
+
+  <div class="grid">
+
+    <!-- BAL: VALÓS INPUTS -->
+    <div>
+      <div class="card">
+        <h2>📊 Teszt-adatok (amit mértél)</h2>
+        <div class="row3">
+          <label>
+            <div class="lbl"><span>Összes rendelés</span></div>
+            <input type="number" id="v_rendel" value="30" min="0" step="1" />
+          </label>
+          <label>
+            <div class="lbl"><span>Visszaküldött</span></div>
+            <input type="number" id="v_vissza" value="9" min="0" step="1" />
+          </label>
+          <label>
+            <div class="lbl"><span>Delivered <small>(átvett)</small></span></div>
+            <input type="number" id="v_delivered" value="15" min="0" step="1" />
+          </label>
+        </div>
+        <div class="hint" style="margin-top:-4px;margin-bottom:14px">
+          Feldolgozás alatt: <b id="v_inprogress" style="color:#ffd66b">—</b>
+          <span style="color:#5a6069"> · nem COD-refuz és még nem átvett → úton van</span>
+        </div>
+        <label>
+          <div class="lbl"><span>Összes reklámköltség <small>(FB Ads a teszt időszakra)</small></span></div>
+          <input type="number" id="v_adspend" value="1050" min="0" step="1" />
+        </label>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>💰 Árak</h2>
+        <label>
+          <div class="lbl"><span>Beszerzési ár / 1 db termék</span></div>
+          <input type="number" id="v_beszerzes" value="50" min="0" step="0.01" />
+        </label>
+        <div class="row">
+          <label>
+            <div class="lbl"><span>Átlag termék / kosár <small>(units per order)</small></span></div>
+            <input type="number" id="v_units" value="1.2" min="0.1" step="0.01" />
+            <div class="hint">Ha sokan vesznek 2×-3× bundle-t, itt látszik.</div>
+          </label>
+          <label>
+            <div class="lbl"><span>AOV <small>(átlag kosár-ár)</small></span></div>
+            <input type="number" id="v_aov" value="219" min="0" step="0.01" />
+            <div class="hint">Átlag rendelés-érték (Shopify → Analytics).</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>🚚 Logisztika (csomagonként)</h2>
+        <div class="row">
+          <label>
+            <div class="lbl"><span>Szállítás <small>(oda-vissza átlag)</small></span></div>
+            <input type="number" id="v_szallitas" value="25" min="0" step="0.01" />
+          </label>
+          <label>
+            <div class="lbl"><span>Csomagolás + címke</span></div>
+            <input type="number" id="v_csomag" value="5" min="0" step="0.01" />
+          </label>
+        </div>
+        <div class="hint">Minden kiküldött csomagra rámegy (a visszaküldöttekre is — az oda-vissza szállítás).</div>
+      </div>
+    </div>
+
+    <!-- JOBB: VALÓS OUTPUTS -->
+    <div>
+      <div class="card">
+        <h2>📦 Rendelés státusz</h2>
+        <div class="out"><span class="k">Sikeres (delivered)</span><span class="v" id="v_delivered_out">—</span></div>
+        <div class="out"><span class="k">Feldolgozás alatt <small>(úton)</small></span><span class="v" id="v_inprogress_out">—</span></div>
+        <div class="out"><span class="k">Visszaküldött</span><span class="v" id="v_vissza_out">—</span></div>
+        <div class="out"><span class="k">Return rate A <small>(vissza ÷ összes rendelés)</small></span><span class="v" id="v_rate_A">—</span></div>
+        <div class="out"><span class="k">Return rate B <small>(vissza ÷ lezárt rendelések · reális)</small></span><span class="v" id="v_rate_B">—</span></div>
+        <div class="out"><span class="k">Tényleges CPA <small>(ad spend ÷ összes rendelés)</small></span><span class="v" id="v_cpa">—</span></div>
+        <div class="out"><span class="k">Eladási ár / 1 db <small>(AOV ÷ units)</small></span><span class="v" id="v_unit_price">—</span></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>⚖️ Profit két szcenárióval</h2>
+        <table class="scen">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Optimista (A)</th>
+              <th>Realista (B)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Return rate</td><td id="s_rate_A">—</td><td id="s_rate_B">—</td></tr>
+            <tr><td>Sikeres (várható)</td><td id="s_siker_A">—</td><td id="s_siker_B">—</td></tr>
+            <tr><td>Bruttó bevétel</td><td id="s_bev_A">—</td><td id="s_bev_B">—</td></tr>
+            <tr><td>COGS</td><td id="s_cogs_A">—</td><td id="s_cogs_B">—</td></tr>
+            <tr><td>Szállítás + csomag</td><td id="s_logi_A">—</td><td id="s_logi_B">—</td></tr>
+            <tr><td>Reklámköltség</td><td id="s_ad_A">—</td><td id="s_ad_B">—</td></tr>
+            <tr class="total"><td>Profit</td><td id="s_profit_A">—</td><td id="s_profit_B">—</td></tr>
+            <tr><td>POAS</td><td id="s_poas_A">—</td><td id="s_poas_B">—</td></tr>
+            <tr><td>Margin %</td><td id="s_margin_A">—</td><td id="s_margin_B">—</td></tr>
+          </tbody>
+        </table>
+        <div class="hint" style="margin-top:12px">A = ha minden úton-lévő csomag átvételre kerül · B = ha a most mért return rate folytatódik az úton-lévőkre is. <b>A reális szám a B</b> — ezzel dolgozz döntésnél.</div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>🎯 Per-rendelés mérőszámok</h2>
+        <div class="out"><span class="k">Profit / sikeres rendelés</span><span class="v" id="v_profit_siker">—</span></div>
+        <div class="out"><span class="k">Veszteség / visszaküldött</span><span class="v" id="v_veszt_vissza">—</span></div>
+        <div class="out"><span class="k">Átlag profit / kiküldött csomag</span><span class="v" id="v_atlag">—</span></div>
+        <div class="out"><span class="k">Margin % <small>(profit ÷ bevétel)</small></span><span class="v" id="v_margin">—</span></div>
+        <div class="out"><span class="k">Markup % <small>(profit / sikeres ÷ COGS / kosár)</small></span><span class="v" id="v_markup">—</span></div>
+      </div>
+
+      <div class="hero">
+        <div>
+          <div class="k">Teszt-nettó profit</div>
+          <div class="v" id="v_h_profit">—</div>
+        </div>
+        <div>
+          <div class="k">POAS <small>(profit / ad spend)</small></div>
+          <div class="v" id="v_h_poas">—</div>
+        </div>
+        <div>
+          <div class="k">ROAS <small>(bevétel / ad spend)</small></div>
+          <div class="v neutral" id="v_h_roas">—</div>
+        </div>
+        <div>
+          <div class="k">Validáció</div>
+          <div class="v" id="v_h_verdikt">—</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>💡 Diagnózis & következő lépés</h2>
+        <div id="v_tanacs" style="font-size:14px;line-height:1.6;color:#c6cbd3">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>Termékvalidáló = tényleges teszt-mérés · ≠ szimuláció · használd a kalkulátor fület „mi lenne, ha" forgatókönyvekhez</footer>
+  </div>
+
+</div>
+
+<script>
+  let CUR = 'RON';
+  const F = (v) => {
+    if (!isFinite(v)) return '—';
+    const s = CUR === 'Ft' ? Math.round(v).toString() : v.toFixed(2);
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ' + CUR;
+  };
+  const F0 = (v) => Math.round(v).toLocaleString('hu').replace(/,/g, ' ');
+
+  /* ===== TABS ===== */
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.panel).classList.add('active');
+    });
+  });
+
+  /* ===== CURRENCY SWITCH ===== */
+  document.querySelectorAll('.cur').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cur').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      CUR = btn.dataset.cur;
+      calc();
+      calcValid();
+    });
+  });
+
+  /* ===== PANEL 1: PROFIT KALKULÁTOR ===== */
+  const pairs = [['beszerzes','beszerzes_s'],['eladas','eladas_s'],['retrate','retrate_s'],['cpa','cpa_s'],['rendel','rendel_s']];
+
+  function sync(a, b) {
+    document.getElementById(a).addEventListener('input', e => { document.getElementById(b).value = e.target.value; calc(); });
+    document.getElementById(b).addEventListener('input', e => { document.getElementById(a).value = e.target.value; calc(); });
+  }
+  pairs.forEach(([a,b]) => sync(a,b));
+  ['szallitas','csomag','fix'].forEach(id => document.getElementById(id).addEventListener('input', calc));
+
+  function calc() {
+    const beszerzes = +document.getElementById('beszerzes').value || 0;
+    const eladas    = +document.getElementById('eladas').value    || 0;
+    const szallitas = +document.getElementById('szallitas').value || 0;
+    const csomag    = +document.getElementById('csomag').value    || 0;
+    const retrate   = (+document.getElementById('retrate').value  || 0) / 100;
+    const cpa       = +document.getElementById('cpa').value       || 0;
+    const rendel    = +document.getElementById('rendel').value    || 0;
+    const fix       = +document.getElementById('fix').value       || 0;
+
+    ['beszerzes','eladas','szallitas','csomag','cpa','rendel','fix'].forEach(id => {
+      document.getElementById('_' + id).textContent = document.getElementById(id).value;
+    });
+    document.getElementById('_retrate').textContent = document.getElementById('retrate').value;
+
+    const sikerProfit = eladas - beszerzes - szallitas - csomag - cpa;
+    const veszteseg = -(szallitas + csomag + cpa);
+    const atlagProfit = sikerProfit * (1 - retrate) + veszteseg * retrate;
+
+    let bevenCpa = NaN;
+    if (rendel > 0) {
+      bevenCpa = (1 - retrate) * (eladas - beszerzes - szallitas - csomag) - retrate * (szallitas + csomag) - fix / rendel;
+    }
+
+    const siker_db  = rendel * (1 - retrate);
+    const vissza_db = rendel * retrate;
+    const adspend   = rendel * cpa;
+    const bevetel   = siker_db * eladas;
+    const koltseg   = rendel * beszerzes * (1 - retrate)
+                    + rendel * (szallitas + csomag)
+                    + adspend
+                    + fix;
+    const havi_profit = bevetel - koltseg;
+    const POAS = adspend > 0 ? havi_profit / adspend : 0;
+    const ROAS = adspend > 0 ? bevetel / adspend : 0;
+
+    document.getElementById('o_sikeresprofit').textContent = F(sikerProfit);
+    document.getElementById('o_sikeresprofit').className   = 'v ' + (sikerProfit > 0 ? 'good' : 'bad');
+
+    const margin = eladas > 0 ? (sikerProfit / eladas) * 100 : 0;
+    const markup = beszerzes > 0 ? (sikerProfit / beszerzes) * 100 : 0;
+    document.getElementById('o_margin').textContent = margin.toFixed(1) + '%';
+    document.getElementById('o_margin').className   = 'v ' + (margin > 20 ? 'good' : margin > 0 ? 'neutral' : 'bad');
+    document.getElementById('o_markup').textContent = markup.toFixed(1) + '%';
+    document.getElementById('o_markup').className   = 'v ' + (markup > 50 ? 'good' : markup > 0 ? 'neutral' : 'bad');
+
+    document.getElementById('o_veszteseg').textContent     = F(veszteseg);
+    document.getElementById('o_veszteseg').className       = 'v bad';
+    document.getElementById('o_atlagprofit').textContent   = F(atlagProfit);
+    document.getElementById('o_atlagprofit').className     = 'v ' + (atlagProfit > 0 ? 'good' : 'bad');
+    document.getElementById('o_beven').textContent         = isNaN(bevenCpa) ? '—' : F(bevenCpa);
+    document.getElementById('o_beven').className           = 'v neutral';
+
+    document.getElementById('o_siker_db').textContent   = F0(siker_db) + ' db';
+    document.getElementById('o_vissza_db').textContent  = F0(vissza_db) + ' db';
+    document.getElementById('o_adspend').textContent    = F(adspend);
+    document.getElementById('o_bevetel').textContent    = F(bevetel);
+    document.getElementById('o_koltseg').textContent    = F(koltseg);
+
+    const haviMargin = bevetel > 0 ? (havi_profit / bevetel) * 100 : 0;
+    document.getElementById('o_havimargin').textContent = haviMargin.toFixed(1) + '%';
+    document.getElementById('o_havimargin').className   = 'v ' + (haviMargin > 15 ? 'good' : haviMargin > 0 ? 'neutral' : 'bad');
+
+    document.getElementById('h_profit').textContent = F(havi_profit);
+    document.getElementById('h_profit').className   = 'v ' + (havi_profit > 0 ? 'good' : 'bad');
+    document.getElementById('h_poas').textContent   = POAS.toFixed(2) + '×';
+    document.getElementById('h_poas').className     = 'v ' + (POAS >= 1.5 ? 'good' : POAS >= 1 ? 'neutral' : 'bad');
+    document.getElementById('h_roas').textContent   = ROAS.toFixed(2) + '×';
+    document.getElementById('h_verdikt').textContent = havi_profit > 0 ? '✅ IGEN' : '❌ NEM';
+    document.getElementById('h_verdikt').className   = 'v ' + (havi_profit > 0 ? 'good' : 'bad');
+
+    let t = '';
+    if (havi_profit <= 0) {
+      const kulonbseg = -havi_profit / rendel;
+      t = `❌ <b>Vesztes.</b> Hogy nyerő legyen a mostani mennyiség mellett: <br>• emeld az eladási árat <b>${F(kulonbseg)}</b>-nal / rendelés, VAGY<br>• csökkentsd a CPA-t <b>${F(cpa - bevenCpa)}</b>-nal (jelenlegi ${F(cpa)} → break-even ${F(bevenCpa)}), VAGY<br>• csökkentsd a return rate-et.`;
+    } else if (POAS < 1.5) {
+      t = `⚠️ <b>Profitábilis, de vékony margin.</b> A POAS ${POAS.toFixed(2)}× azt jelenti, 1 ${CUR} FB-költésből ${(POAS).toFixed(2)} ${CUR} profit marad. Skálázáskor óvatosan — a CPA nőhet, és az megfordíthatja. Cél: POAS > 1.5, még jobb > 2.`;
+    } else if (POAS < 2) {
+      t = `✅ <b>Rendben profitábilis.</b> POAS ${POAS.toFixed(2)}× — van tere a skálázásnak. A break-even CPA ${F(bevenCpa)}, vagyis a jelenlegi ${F(cpa)} CPA ${F(bevenCpa - cpa)} biztonság-réssel van.`;
+    } else {
+      t = `🚀 <b>Erős profit, skálázható.</b> POAS ${POAS.toFixed(2)}× — itt szabad feljebb menni a költésben. A CPA ${F(bevenCpa - cpa)}-val van a break-even alatt → van tere, hogy a CPA nőjön skálázáskor. Próbálj napi +30% költés-emelést.`;
+    }
+    document.getElementById('tanacs').innerHTML = t;
+  }
+
+  const KALK_DEFAULTS = {
+    RON: { beszerzes: 50,   eladas: 199,   szallitas: 25,   csomag: 5,   retrate: 30, cpa: 35,   rendel: 300, fix: 1500   },
+    Ft:  { beszerzes: 4000, eladas: 15990, szallitas: 2000, csomag: 400, retrate: 30, cpa: 2800, rendel: 300, fix: 120000 }
+  };
+  function resetKalk() {
+    const d = KALK_DEFAULTS[CUR];
+    Object.keys(d).forEach(k => { document.getElementById(k).value = d[k]; });
+    pairs.forEach(([a,b]) => document.getElementById(b).value = document.getElementById(a).value);
+    calc();
+  }
+
+  /* ===== PANEL 2: TERMÉKVALIDÁLÓ ===== */
+  let _vState = null;
+  const vIds = ['v_rendel','v_vissza','v_delivered','v_adspend','v_beszerzes','v_units','v_aov','v_szallitas','v_csomag'];
+  vIds.forEach(id => document.getElementById(id).addEventListener('input', calcValid));
+
+  function calcValid() {
+    const rendel      = +document.getElementById('v_rendel').value      || 0;
+    const vissza      = Math.min(+document.getElementById('v_vissza').value || 0, rendel);
+    const delivered_i = Math.min(+document.getElementById('v_delivered').value || 0, Math.max(0, rendel - vissza));
+    const adspend     = +document.getElementById('v_adspend').value     || 0;
+    const beszerzes   = +document.getElementById('v_beszerzes').value   || 0;
+    const units       = +document.getElementById('v_units').value       || 0;
+    const aov         = +document.getElementById('v_aov').value         || 0;
+    const szallitas   = +document.getElementById('v_szallitas').value   || 0;
+    const csomag      = +document.getElementById('v_csomag').value      || 0;
+
+    const in_progress = Math.max(0, rendel - vissza - delivered_i);
+    const resolved = vissza + delivered_i;
+
+    // Két return rate
+    const rate_A = rendel > 0 ? vissza / rendel : 0;          // vissza ÷ összes rendelés
+    const rate_B = resolved > 0 ? vissza / resolved : 0;      // vissza ÷ lezárt rendelések (reális)
+
+    const cpa_all = rendel > 0 ? adspend / rendel : 0;
+    const cogs_per_kosar = beszerzes * units;
+    const unit_price = units > 0 ? aov / units : 0;
+
+    // Közös költségek (szcenáriótól független)
+    const szall_tot = rendel * szallitas;
+    const csomag_tot = rendel * csomag;
+    const logi_tot = szall_tot + csomag_tot;
+
+    // Szcenárió A — optimista: minden jelenleg-nem-vissza majd átvételre kerül
+    const siker_A = rendel - vissza;
+    const bev_A = siker_A * aov;
+    const cogs_A = siker_A * cogs_per_kosar;
+    const kolt_A = cogs_A + logi_tot + adspend;
+    const profit_A = bev_A - kolt_A;
+    const POAS_A = adspend > 0 ? profit_A / adspend : 0;
+    const margin_A = bev_A > 0 ? (profit_A / bev_A) * 100 : 0;
+
+    // Szcenárió B — realista: a mostani return rate folytatódik
+    const siker_B = rendel * (1 - rate_B);
+    const bev_B = siker_B * aov;
+    const cogs_B = siker_B * cogs_per_kosar;
+    const kolt_B = cogs_B + logi_tot + adspend;
+    const profit_B = bev_B - kolt_B;
+    const POAS_B = adspend > 0 ? profit_B / adspend : 0;
+    const ROAS_B = adspend > 0 ? bev_B / adspend : 0;
+    const margin_B = bev_B > 0 ? (profit_B / bev_B) * 100 : 0;
+
+    // Per-rendelés (contribution margin — szcenáriótól független)
+    const profit_siker = aov - cogs_per_kosar - szallitas - csomag - cpa_all;
+    const veszt_vissza = -(szallitas + csomag + cpa_all);
+    const atlag_B = rendel > 0 ? profit_B / rendel : 0;
+    const markup = cogs_per_kosar > 0 ? (profit_siker / cogs_per_kosar) * 100 : 0;
+
+    const rA_pct = rate_A * 100;
+    const rB_pct = rate_B * 100;
+
+    const rateClass = (v) => v < 25 ? 'good' : v < 40 ? 'neutral' : 'bad';
+    const profitClass = (v) => v > 0 ? 'good' : 'bad';
+    const poasClass = (v) => v >= 1.5 ? 'good' : v >= 1 ? 'neutral' : 'bad';
+    const marginClass = (v) => v > 15 ? 'good' : v > 0 ? 'neutral' : 'bad';
+
+    // Input echo
+    document.getElementById('v_inprogress').textContent = F0(in_progress) + ' db';
+
+    // Rendelés státusz kártya
+    document.getElementById('v_delivered_out').textContent = F0(delivered_i) + ' db';
+    document.getElementById('v_delivered_out').className   = 'v good';
+    document.getElementById('v_inprogress_out').textContent = F0(in_progress) + ' db';
+    document.getElementById('v_inprogress_out').className   = 'v neutral';
+    document.getElementById('v_vissza_out').textContent     = F0(vissza) + ' db';
+    document.getElementById('v_vissza_out').className       = 'v bad';
+    document.getElementById('v_rate_A').textContent         = rA_pct.toFixed(1) + '%';
+    document.getElementById('v_rate_A').className           = 'v ' + rateClass(rA_pct);
+    document.getElementById('v_rate_B').textContent         = resolved > 0 ? rB_pct.toFixed(1) + '%' : '—';
+    document.getElementById('v_rate_B').className           = 'v ' + (resolved === 0 ? 'neutral' : rateClass(rB_pct));
+    document.getElementById('v_cpa').textContent            = F(cpa_all);
+    document.getElementById('v_unit_price').textContent     = F(unit_price);
+
+    // Szcenáriók tábla
+    document.getElementById('s_rate_A').innerHTML   = `<span class="${rateClass(rA_pct)}">${rA_pct.toFixed(1)}%</span>`;
+    document.getElementById('s_rate_B').innerHTML   = resolved > 0 ? `<span class="${rateClass(rB_pct)}">${rB_pct.toFixed(1)}%</span>` : '—';
+    document.getElementById('s_siker_A').textContent = siker_A.toFixed(1) + ' db';
+    document.getElementById('s_siker_B').textContent = siker_B.toFixed(1) + ' db';
+    document.getElementById('s_bev_A').textContent   = F(bev_A);
+    document.getElementById('s_bev_B').textContent   = F(bev_B);
+    document.getElementById('s_cogs_A').textContent  = '− ' + F(cogs_A);
+    document.getElementById('s_cogs_B').textContent  = '− ' + F(cogs_B);
+    document.getElementById('s_logi_A').textContent  = '− ' + F(logi_tot);
+    document.getElementById('s_logi_B').textContent  = '− ' + F(logi_tot);
+    document.getElementById('s_ad_A').textContent    = '− ' + F(adspend);
+    document.getElementById('s_ad_B').textContent    = '− ' + F(adspend);
+    document.getElementById('s_profit_A').innerHTML  = `<span class="${profitClass(profit_A)}">${F(profit_A)}</span>`;
+    document.getElementById('s_profit_B').innerHTML  = `<span class="${profitClass(profit_B)}">${F(profit_B)}</span>`;
+    document.getElementById('s_poas_A').innerHTML    = adspend > 0 ? `<span class="${poasClass(POAS_A)}">${POAS_A.toFixed(2)}×</span>` : '—';
+    document.getElementById('s_poas_B').innerHTML    = adspend > 0 ? `<span class="${poasClass(POAS_B)}">${POAS_B.toFixed(2)}×</span>` : '—';
+    document.getElementById('s_margin_A').innerHTML  = `<span class="${marginClass(margin_A)}">${margin_A.toFixed(1)}%</span>`;
+    document.getElementById('s_margin_B').innerHTML  = `<span class="${marginClass(margin_B)}">${margin_B.toFixed(1)}%</span>`;
+
+    // Per-rendelés kártya (realista alapon)
+    document.getElementById('v_profit_siker').textContent = F(profit_siker);
+    document.getElementById('v_profit_siker').className   = 'v ' + (profit_siker > 0 ? 'good' : 'bad');
+    document.getElementById('v_veszt_vissza').textContent = F(veszt_vissza);
+    document.getElementById('v_veszt_vissza').className   = 'v bad';
+    document.getElementById('v_atlag').textContent        = F(atlag_B);
+    document.getElementById('v_atlag').className          = 'v ' + (atlag_B > 0 ? 'good' : 'bad');
+    document.getElementById('v_margin').textContent       = margin_B.toFixed(1) + '%';
+    document.getElementById('v_margin').className         = 'v ' + marginClass(margin_B);
+    document.getElementById('v_markup').textContent       = markup.toFixed(1) + '%';
+    document.getElementById('v_markup').className         = 'v ' + (markup > 50 ? 'good' : markup > 0 ? 'neutral' : 'bad');
+
+    // Hero — Realista (B)
+    document.getElementById('v_h_profit').textContent = F(profit_B);
+    document.getElementById('v_h_profit').className   = 'v ' + (profit_B > 0 ? 'good' : 'bad');
+    document.getElementById('v_h_poas').textContent   = adspend > 0 ? POAS_B.toFixed(2) + '×' : '—';
+    document.getElementById('v_h_poas').className     = 'v ' + poasClass(POAS_B);
+    document.getElementById('v_h_roas').textContent   = adspend > 0 ? ROAS_B.toFixed(2) + '×' : '—';
+
+    let verdikt, vclass;
+    if (rendel < 10) { verdikt = '⏳ KEVÉS ADAT'; vclass = 'neutral'; }
+    else if (resolved < 5) { verdikt = '⏳ VÁRJ A LEZÁRÁSRA'; vclass = 'neutral'; }
+    else if (profit_B > 0 && POAS_B >= 1.5) { verdikt = '🚀 SKÁLÁZHATÓ'; vclass = 'good'; }
+    else if (profit_B > 0) { verdikt = '✅ NYERŐ (vékonyan)'; vclass = 'neutral'; }
+    else { verdikt = '❌ BUKÓ'; vclass = 'bad'; }
+    document.getElementById('v_h_verdikt').textContent = verdikt;
+    document.getElementById('v_h_verdikt').className   = 'v ' + vclass;
+
+    // Diagnózis (realista B-szcenárió alapján)
+    let t = '';
+    if (rendel < 10) {
+      t = `⏳ <b>Még kevés adat.</b> ${rendel} rendelés nem elég megbízható mintára — min. 20-30 rendelés kell ahhoz, hogy a return rate és CPA ne legyen véletlen. Menjen még a teszt.`;
+    } else if (resolved < 5) {
+      t = `⏳ <b>Várj a lezárásra.</b> Csak ${resolved} rendelés van lezárva (${delivered_i} delivered + ${vissza} vissza), ${in_progress} még úton. A return rate B még nem megbízható — várd meg, míg legalább 15-20 rendelés lezárul, és csak utána hozz döntést.`;
+    } else if (profit_B <= 0) {
+      const hianyo = -profit_B;
+      const ar_emeles = siker_B > 0 ? hianyo / siker_B : 0;
+      const cpa_cel = rendel > 0 ? (bev_B - cogs_B - logi_tot) / rendel : 0;
+      t = `❌ <b>Realista szcenárió bukó: ${F(profit_B)} veszteség.</b> (Return rate B = ${rB_pct.toFixed(1)}%)<br>
+      • Tényleges CPA: <b>${F(cpa_all)}</b> — a break-even CPA <b>${F(cpa_cel)}</b> lenne.<br>
+      • Nullára jön: +<b>${F(ar_emeles)}</b> az AOV-n (upsell / bundle), VAGY CPA le <b>${F(cpa_cel)}</b>-ra, VAGY alacsonyabb return rate.<br>
+      • Return rate B ${rB_pct.toFixed(1)}% ${rB_pct > 35 ? '— <b>magas</b>, a COD-folyamat (pre-call, SMS-confirm, futár-választás) húzhatja le.' : rB_pct > 25 ? '— normál tartomány.' : '— <b>kiváló</b>.'}<br>
+      ${Math.abs(profit_A - profit_B) > 50 ? `• Fontos: az optimista (A) szcenárió ${F(profit_A)}, a realista (B) ${F(profit_B)} — a két szám közti különbség mutatja, mennyire érzékeny a döntés az úton-lévő csomagok kimenetére.` : ''}`;
+    } else if (POAS_B < 1.5) {
+      t = `⚠️ <b>Reálisan nyerő, de vékony.</b> ${F(profit_B)} profit · POAS ${POAS_B.toFixed(2)}× (B, rate ${rB_pct.toFixed(1)}%).<br>
+      • 1 ${CUR} FB-költésből ${POAS_B.toFixed(2)} ${CUR} profit marad — skálázáskor CPA nőhet → könnyen átbillenhet vesztesbe.<br>
+      • Mielőtt skálázol: AOV feljebb (+10-15%) upsell / bundle / volume discount kombóval. Cél: POAS > 1.5.<br>
+      • Return rate B ${rB_pct.toFixed(1)}% — ${rB_pct > 35 ? 'ha ezt letörnéd 25% alá, megugrana a profit.' : 'rendben.'}`;
+    } else if (POAS_B < 2) {
+      t = `✅ <b>Validált termék!</b> ${F(profit_B)} profit · POAS ${POAS_B.toFixed(2)}× · margin ${margin_B.toFixed(1)}% (realista B).<br>
+      • Skálázható — van tere, hogy a CPA nőjön.<br>
+      • Következő lépés: napi +20-30% költés-emelés, és figyelj, hogy a POAS ne csússzon 1.5 alá.<br>
+      • Return rate B ${rB_pct.toFixed(1)}% → ${rB_pct > 30 ? 'még mindig van mit faragni a COD-folyamaton.' : 'pihenhet, nem ez a szűk keresztmetszet.'}`;
+    } else {
+      t = `🚀 <b>ERŐS VALIDÁCIÓ.</b> ${F(profit_B)} profit · POAS ${POAS_B.toFixed(2)}× · margin ${margin_B.toFixed(1)}% (realista B).<br>
+      • Ez skálázandó termék — nyomd a költést feljebb.<br>
+      • Jelenlegi CPA ${F(cpa_all)} — bőven van tere, hogy megduplázd, és még mindig profit marad.<br>
+      • Ne aggódj a return rate ${rB_pct.toFixed(1)}% miatt ${rB_pct < 30 ? '— rendben van' : '— ilyen POAS mellett megengedhető'}. Fókusz: skálázás.`;
+    }
+    document.getElementById('v_tanacs').innerHTML = t;
+
+    // Állapot mentése exportra
+    _vState = {
+      rendel, vissza, delivered_i, in_progress, resolved, adspend,
+      beszerzes, units, aov, unit_price, szallitas, csomag,
+      rA_pct, rB_pct, cpa_all, logi_tot,
+      siker_A, bev_A, cogs_A, profit_A, POAS_A, margin_A,
+      siker_B, bev_B, cogs_B, profit_B, POAS_B, ROAS_B, margin_B,
+      profit_siker, veszt_vissza, atlag_B, markup,
+      verdikt, tanacs_plain: t.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+    };
+  }
+
+  function exportValid() {
+    calcValid();
+    const s = _vState;
+    if (!s) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const M = (v) => {
+      if (!isFinite(v)) return '—';
+      const s = CUR === 'Ft' ? Math.round(v).toString() : v.toFixed(2);
+      return s + ' ' + CUR;
+    };
+    const PCT = (v) => v.toFixed(1) + '%';
+    const ORSZAG = CUR === 'Ft' ? 'Magyarországon' : 'Romániában';
+
+    const md = `# Termékvalidáció export — ${today}
+
+## Teszt-adatok (amit mértél)
+- Összes rendelés: **${s.rendel}**
+- Visszaküldött: **${s.vissza}**
+- Delivered (átvett): **${s.delivered_i}**
+- Feldolgozás alatt (számított): **${s.in_progress}**
+- Összes reklámköltség: **${M(s.adspend)}**
+
+### Árak
+- Beszerzési ár / 1 db termék: ${M(s.beszerzes)}
+- Átlag termék / kosár: ${s.units}
+- AOV (átlag kosár-ár): ${M(s.aov)}
+- Eladási ár / 1 db (AOV ÷ units): ${M(s.unit_price)}
+
+### Logisztika (csomagonként)
+- Szállítás (oda-vissza átlag): ${M(s.szallitas)}
+- Csomagolás + címke: ${M(s.csomag)}
+
+## Return rate két nézetben
+- **Return rate A** (vissza ÷ összes rendelés): ${PCT(s.rA_pct)}
+- **Return rate B** (vissza ÷ lezárt rendelések · reális): ${s.resolved > 0 ? PCT(s.rB_pct) : '— (nincs lezárt rendelés)'}
+
+## Tényleges CPA
+- ad spend ÷ összes rendelés: **${M(s.cpa_all)}**
+
+## Profit-szcenáriók
+
+### Optimista (A) — ha minden úton-lévő csomag átvételre kerül
+| Tétel | Érték |
+|---|---|
+| Sikeres (várható) | ${s.siker_A.toFixed(1)} db |
+| Bruttó bevétel | ${M(s.bev_A)} |
+| COGS | − ${M(s.cogs_A)} |
+| Szállítás + csomag | − ${M(s.logi_tot)} |
+| Reklámköltség | − ${M(s.adspend)} |
+| **Profit** | **${M(s.profit_A)}** |
+| POAS | ${s.adspend > 0 ? s.POAS_A.toFixed(2) + '×' : '—'} |
+| Margin | ${PCT(s.margin_A)} |
+
+### Realista (B) — ha a mostani return rate folytatódik
+| Tétel | Érték |
+|---|---|
+| Sikeres (várható) | ${s.siker_B.toFixed(1)} db |
+| Bruttó bevétel | ${M(s.bev_B)} |
+| COGS | − ${M(s.cogs_B)} |
+| Szállítás + csomag | − ${M(s.logi_tot)} |
+| Reklámköltség | − ${M(s.adspend)} |
+| **Profit** | **${M(s.profit_B)}** |
+| POAS | ${s.adspend > 0 ? s.POAS_B.toFixed(2) + '×' : '—'} |
+| ROAS | ${s.adspend > 0 ? s.ROAS_B.toFixed(2) + '×' : '—'} |
+| Margin | ${PCT(s.margin_B)} |
+
+## Per-rendelés mérőszámok
+- Profit / sikeres rendelés: ${M(s.profit_siker)}
+- Veszteség / visszaküldött rendelés: ${M(s.veszt_vissza)}
+- Átlag profit / kiküldött csomag (realista): ${M(s.atlag_B)}
+- Markup %: ${PCT(s.markup)}
+
+## Verdikt
+**${s.verdikt}**
+
+## Diagnózis
+${s.tanacs_plain}
+
+---
+
+## Optimalizáló prompt (másold be egy AI-asszisztensnek)
+
+Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapján válaszolj:
+
+1. **Szűk keresztmetszet**: Hol van a legnagyobb profit-fogás — AOV, CPA, return rate, COGS, vagy logisztika? Számokkal indokold.
+2. **Konkrét lépések**: Milyen 3 konkrét, mérhető lépést tegyek a következő 100 rendelésig, hogy a POAS > 1.5 legyen realista (B) szcenárióban?
+3. **"Mi lenne, ha" forgatókönyvek**: Számold ki a B-szcenárió profitját ha:
+   - a) AOV +10% (upsell/bundle)
+   - b) CPA −20% (kreatív-optimalizálás)
+   - c) Return rate −5 pp (COD pre-call, SMS-confirm)
+   - d) Mindhárom kombinálva
+4. **Feltételezések**: Mi a legkockázatosabb feltételezés a mostani adatokban (mintanagyság, lezáratlan rendelések aránya, szezonalitás)?
+5. **Döntés**: Skálázzak most, optimalizáljak előbb, vagy dobjam a terméket? Egyértelmű ajánlás.
+`;
+
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `termek-validacio-${today}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  const VALID_DEFAULTS = {
+    RON: { v_rendel: 30, v_vissza: 9, v_delivered: 15, v_adspend: 1050,  v_beszerzes: 50,   v_units: 1.2, v_aov: 219,   v_szallitas: 25,   v_csomag: 5   },
+    Ft:  { v_rendel: 30, v_vissza: 9, v_delivered: 15, v_adspend: 84000, v_beszerzes: 4000, v_units: 1.2, v_aov: 17500, v_szallitas: 2000, v_csomag: 400 }
+  };
+  function resetValid() {
+    const d = VALID_DEFAULTS[CUR];
+    Object.keys(d).forEach(k => { document.getElementById(k).value = d[k]; });
+    calcValid();
+  }
+
+  calc();
+  calcValid();
+</script>
+</body>
+</html>
