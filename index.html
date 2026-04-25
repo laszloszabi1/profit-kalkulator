@@ -212,6 +212,31 @@
   .btn-secondary:hover { background: #1f2e25; border-color: #4ade80; }
   .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* ===== ACTION BAR (oldal-alji nagy gombok) ===== */
+  .action-bar {
+    display: flex; gap: 12px; margin: 28px 0 12px;
+  }
+  .action-btn {
+    flex: 1; padding: 16px 20px;
+    font-size: 15px; font-weight: 700; letter-spacing: 0.02em;
+    border-radius: 10px; cursor: pointer; font-family: inherit;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .action-btn:active { transform: translateY(1px); }
+  .action-save {
+    background: #1f2530; color: #ffd66b; border: 2px solid #ffd66b;
+  }
+  .action-save:hover { background: #2a2f3d; }
+  .action-export {
+    background: #1a2027; color: #4ade80; border: 2px solid #4ade80;
+  }
+  .action-export:hover { background: #1f2e25; }
+  .action-export-md {
+    background: #171a21; color: #8a8f98; border: 2px solid #2d333e;
+  }
+  .action-export-md:hover { background: #1a1f27; border-color: #4a5260; color: #e6e8eb; }
+
   /* ===== TOAST ===== */
   .toast {
     position: fixed; bottom: 28px; left: 50%;
@@ -271,6 +296,8 @@
     .modal-actions { flex-direction: column; align-items: stretch; }
     .btn-primary, .btn-secondary { width: 100%; padding: 11px 14px; }
     .saves-card { padding: 12px 14px; }
+    .action-bar { flex-direction: column; gap: 10px; }
+    .action-btn { padding: 14px 18px; font-size: 14px; }
   }
 </style>
 </head>
@@ -291,8 +318,6 @@
 
   <h1>💰 Profit kalkulátor
     <button class="reset" onclick="resetKalk()">reset</button>
-    <button class="export" onclick="openExportModal('kalk')">⬇ export</button>
-    <button class="save-btn" onclick="addSave('kalk')">💾 mentés</button>
   </h1>
   <div class="sub">ecomm + COD logisztika + FB Ads · szimulátor</div>
 
@@ -417,6 +442,11 @@
 
   </div>
 
+  <div class="action-bar">
+    <button class="action-btn action-save" onclick="addSave('kalk')">💾 Mentés</button>
+    <button class="action-btn action-export" onclick="openExportModal('kalk')">⬇ Export (CSV)</button>
+  </div>
+
   <footer>POAS &gt; 1 → profitábilis · POAS &lt; 1 → vesztes · POAS 1 — 1.5 → határon · POAS &gt; 2 → erős skálázás</footer>
   </div>
 
@@ -425,9 +455,6 @@
 
   <h1>🧪 Termékvalidáló
     <button class="reset" onclick="resetValid()">reset</button>
-    <button class="export" onclick="exportValid()">⬇ MD</button>
-    <button class="export" onclick="openExportModal('valid')">⬇ CSV</button>
-    <button class="save-btn" onclick="addSave('valid')">💾 mentés</button>
   </h1>
   <div class="sub">Valós teszt-adataid → tényleges szám. Írd be, amit eddig mértél a termékkel</div>
 
@@ -576,6 +603,12 @@
       </div>
     </div>
 
+  </div>
+
+  <div class="action-bar">
+    <button class="action-btn action-save" onclick="addSave('valid')">💾 Mentés</button>
+    <button class="action-btn action-export" onclick="openExportModal('valid')">⬇ Export (CSV)</button>
+    <button class="action-btn action-export-md" onclick="exportValid()">⬇ Export (MD)</button>
   </div>
 
   <footer>Termékvalidáló = tényleges teszt-mérés · ≠ szimuláció · használd a kalkulátor fület „mi lenne, ha" forgatókönyvekhez</footer>
