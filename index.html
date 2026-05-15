@@ -71,6 +71,28 @@
   }
   input[type="number"]:focus { outline: none; border-color: #ffd66b; }
   input[type="range"] { width: 100%; margin-top: 8px; accent-color: #ffd66b; height: 28px; }
+  input[type="date"], select {
+    width: 100%; padding: 10px 12px; font-size: 16px;
+    background: #0f1115; border: 1px solid #2d333e; color: #e6e8eb;
+    border-radius: 6px; font-family: inherit;
+    -webkit-appearance: none; appearance: none;
+  }
+  input[type="date"]:focus, select:focus { outline: none; border-color: #ffd66b; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+  select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%238a8f98' d='M0 0l6 8 6-8z'/></svg>");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
+  .n-records-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+  .n-records-table th { text-align: left; padding: 8px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #8a8f98; font-weight: 600; border-bottom: 1px solid #252a33; }
+  .n-records-table th.r, .n-records-table td.r { text-align: right; }
+  .n-records-table td { padding: 8px 10px; border-bottom: 1px dashed #1f242c; color: #e6e8eb; }
+  .n-records-table tr:last-child td { border-bottom: 0; }
+  .n-records-table tr:hover td { background: #1a1f27; }
+  .n-records-table a.dlink { color: #ffd66b; text-decoration: none; font-weight: 600; }
+  .n-records-table a.dlink:hover { text-decoration: underline; }
+  .n-records-table .delx { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #8a8f98; cursor: pointer; }
+  .n-records-table .delx:hover { background: #2d2024; color: #f87171; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   table.scen { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
@@ -307,6 +329,7 @@
   <div class="tabs">
     <button class="tab active" data-panel="p_kalk">💰 Profit kalkulátor</button>
     <button class="tab" data-panel="p_valid">🧪 Termékvalidáló</button>
+    <button class="tab" data-panel="p_napi">📈 Napi profit</button>
     <div class="cur-switch" title="Valuta — csak a címke változik, a számokat kézzel írd át">
       <button class="cur active" data-cur="RON">RON</button>
       <button class="cur" data-cur="Ft">Ft</button>
@@ -614,6 +637,136 @@
   <footer>Termékvalidáló = tényleges teszt-mérés · ≠ szimuláció · használd a kalkulátor fület „mi lenne, ha" forgatókönyvekhez</footer>
   </div>
 
+  <!-- ========== PANEL 3: NAPI PROFIT ========== -->
+  <div id="p_napi" class="panel">
+
+  <h1>📈 Napi profit
+    <button class="reset" onclick="resetNapi()">napi inputok nullázása</button>
+  </h1>
+  <div class="sub">Napi szintű profit-naplózás · ment dátumra · CSV-be exportálható (Excel megnyitja)</div>
+
+  <!-- Dátum + TVA -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="row">
+      <label>
+        <div class="lbl"><span>📅 Dátum</span></div>
+        <input type="date" id="n_date" />
+      </label>
+      <label>
+        <div class="lbl"><span>TVA-fizető?</span></div>
+        <select id="n_vat">
+          <option value="yes">Igen — 21% TVA</option>
+          <option value="no">Nem — neplatitor de TVA</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- BAL: napi inputok + beállítások -->
+    <div>
+      <div class="card">
+        <h2>📊 Napi adatok</h2>
+        <div class="hint" style="margin-top:-6px;margin-bottom:14px">Csak ezeket írod át naponta. Mentés után a számok megmaradnak.</div>
+        <label>
+          <div class="lbl"><span>Adspend <small>(reklámköltség, nettó RON)</small></span></div>
+          <input type="number" id="n_adspend" value="0" min="0" step="0.01" />
+        </label>
+        <label>
+          <div class="lbl"><span>Eladás <small>(bruttó, TVA-val együtt)</small></span></div>
+          <input type="number" id="n_eladas" value="0" min="0" step="0.01" />
+        </label>
+        <div class="row">
+          <label>
+            <div class="lbl"><span>Rendelések száma</span></div>
+            <input type="number" id="n_rendel" value="0" min="0" step="1" />
+          </label>
+          <label>
+            <div class="lbl"><span>Eladott termékszám <small>(units)</small></span></div>
+            <input type="number" id="n_units" value="0" min="0" step="1" />
+          </label>
+        </div>
+        <label>
+          <div class="lbl"><span>COG / termék <small>(bruttó beszerzés / 1 db)</small></span></div>
+          <input type="number" id="n_cog" value="0" min="0" step="0.01" />
+        </label>
+        <div class="hint">COGS automatikusan: <b id="n_cogs_preview" style="color:#ffd66b">—</b> = COG × units</div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>⚙️ Beállítások <small style="text-transform:none;letter-spacing:0;color:#5a6069;font-weight:400">(ritkán változnak — egyszer beállítod)</small></h2>
+        <label>
+          <div class="lbl"><span>Return %</span><span class="val" id="n_retur_pct_val">29%</span></div>
+          <input type="number" id="n_retur_pct" value="29" min="0" max="100" step="1" />
+        </label>
+        <div class="row">
+          <label>
+            <div class="lbl"><span>Kiküldési ár / csomag</span></div>
+            <input type="number" id="n_kuldes" value="23.4" min="0" step="0.1" />
+          </label>
+          <label>
+            <div class="lbl"><span>Return-csomag díj</span></div>
+            <input type="number" id="n_retur_dij" value="2.5" min="0" step="0.1" />
+          </label>
+        </div>
+        <label>
+          <div class="lbl"><span>Havi fix költség <small>(opcionális — 30 nappal osztva levonja)</small></span></div>
+          <input type="number" id="n_fix" value="0" min="0" step="0.01" />
+        </label>
+        <div class="hint">A beállítások automatikusan elmentődnek a böngészőben (localStorage) — minden új napon ugyanezek maradnak.</div>
+      </div>
+    </div>
+
+    <!-- JOBB: Outputok -->
+    <div>
+      <div class="card">
+        <h2>📦 Számolt mennyiségek</h2>
+        <div class="out"><span class="k">COGS <small>(COG × units)</small></span><span class="v" id="n_o_cogs">—</span></div>
+        <div class="out"><span class="k">Eladás effektív <small>(return után)</small></span><span class="v" id="n_o_eladas_eff">—</span></div>
+        <div class="out"><span class="k">COGS effektív <small>(return után)</small></span><span class="v" id="n_o_cogs_eff">—</span></div>
+        <div class="out"><span class="k">Szállítás összesen <small>(kiküldés × rendel + return-díj)</small></span><span class="v" id="n_o_szallitas">—</span></div>
+        <div class="out"><span class="k">Ebből: return-csomag költség</span><span class="v" id="n_o_retur_dij">—</span></div>
+        <div class="out"><span class="k">Fix költség <small>(napi share = havi/30)</small></span><span class="v" id="n_o_fix">—</span></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>💰 Pénzügyi eredmény</h2>
+        <div class="out"><span class="k">P&amp;L <small>(könyvelési profit)</small></span><span class="v" id="n_o_pnl">—</span></div>
+        <div class="out"><span class="k">CashFlow <small>(pénzmozgás)</small></span><span class="v" id="n_o_cashflow">—</span></div>
+        <div class="out"><span class="k">TVA befizetés <small>(állam felé)</small></span><span class="v" id="n_o_vat">—</span></div>
+        <div class="hint" id="n_vat_hint" style="margin-top:6px"></div>
+      </div>
+
+      <div class="hero">
+        <div>
+          <div class="k">Elérhető <small>(napi profit, fix költség levonva)</small></div>
+          <div class="v" id="n_h_available">—</div>
+        </div>
+        <div>
+          <div class="k">Margin <small>(Elérhető ÷ Eladás eff.)</small></div>
+          <div class="v" id="n_h_margin">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="action-bar">
+    <button class="action-btn action-save" onclick="saveNapi()">💾 Mentés erre a napra</button>
+    <button class="action-btn action-export" onclick="openExportModal('napi')">⬇ Export (CSV)</button>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>📋 Mentett napok <small style="text-transform:none;letter-spacing:0;color:#5a6069;font-weight:400">— kattints a dátumra a betöltéshez</small></h2>
+    <div id="n_records_wrap" style="overflow-x:auto">
+      <span class="saves-empty">Még nincs mentett nap.</span>
+    </div>
+  </div>
+
+  <footer>Napi profit-napló · adatok lokálisan tárolódnak (böngésző localStorage) · ne töröld a böngésző-cache-t!</footer>
+  </div>
+
 </div>
 
 <!-- Export modal -->
@@ -765,18 +918,24 @@
   /* ===== CSV EXPORT MODAL ===== */
   function openExportModal(panel) {
     _exportPanel = panel;
-    const arr = loadSaves(panel);
+    let arr;
+    if (panel === 'napi') {
+      const records = loadNapiRecords();
+      arr = Object.keys(records).sort().reverse().map(d => records[d]);
+    } else {
+      arr = loadSaves(panel);
+    }
     const body = document.getElementById('modal_body');
-    const titleSuffix = panel === 'kalk' ? 'Profit kalkulátor' : 'Termékvalidáló';
-    document.getElementById('modal_title').textContent = `Export — ${titleSuffix} (${arr.length} mentés)`;
+    const titleMap = { kalk: 'Profit kalkulátor', valid: 'Termékvalidáló', napi: 'Napi profit' };
+    document.getElementById('modal_title').textContent = `Export — ${titleMap[panel]} (${arr.length} ${panel === 'napi' ? 'nap' : 'mentés'})`;
 
     if (!arr.length) {
-      body.innerHTML = '<div class="modal-empty">Még nincs mentett termék ezen a panelen.<small>Mentsd el az aktuális beállításokat a 💾 gombbal.</small></div>';
+      body.innerHTML = `<div class="modal-empty">Még nincs ${panel === 'napi' ? 'mentett nap' : 'mentett termék'} ezen a panelen.<small>Mentsd el az aktuális beállításokat a 💾 gombbal.</small></div>`;
       _exportCSV = '';
       document.getElementById('btn_copy').disabled = true;
       document.getElementById('btn_download').disabled = true;
     } else {
-      const sorted = [...arr].sort((a, b) => Number(b.id) - Number(a.id));
+      const sorted = panel === 'napi' ? arr : [...arr].sort((a, b) => Number(b.id) - Number(a.id));
       const { headers, rows } = buildExportRows(panel, sorted);
       let html = '<table class="export-table"><thead><tr>';
       headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
@@ -809,6 +968,21 @@
   });
 
   function buildExportRows(panel, arr) {
+    if (panel === 'napi') {
+      const headers = ['Dátum','TVA-fiz.','Adspend','Eladás bruttó','Rendelések','Eladott db','COG/db','COGS','Return %','Kiküldés/db','Retur fix','Havi fix','Eladás eff.','COGS eff.','Szállítás','P&L','CashFlow','TVA fiz.','Elérhető','Margin %'];
+      const rows = arr.map(r => {
+        const i = r.inputs, s = r.settings, o = r.outputs;
+        return [
+          r.date, s.n_vat === 'yes' ? 'igen' : 'nem',
+          i.n_adspend, i.n_eladas, i.n_rendel, i.n_units, i.n_cog,
+          (+o.cogs_gross).toFixed(2), s.n_retur_pct + '%', s.n_kuldes, s.n_retur_dij, s.n_fix,
+          (+o.eladas_eff).toFixed(2), (+o.cogs_eff).toFixed(2), (+o.szallitas_total).toFixed(2),
+          (+o.pnl).toFixed(2), (+o.cashflow).toFixed(2), (+o.vat_pay).toFixed(2),
+          (+o.available).toFixed(2), (+o.margin).toFixed(1) + '%'
+        ];
+      });
+      return { headers, rows };
+    }
     if (panel === 'kalk') {
       const headers = ['Név','Dátum','Valuta','Beszerzés','Eladás','Szállítás','Csomag','Return rate %','CPA','Havi rendelés','Fix költség','Profit/sikeres','Margin %','Havi profit','POAS','ROAS','Verdikt'];
       const rows = arr.map(s => {
@@ -912,7 +1086,8 @@
   function downloadCSV() {
     if (!_exportCSV) return;
     const today = new Date().toISOString().slice(0, 10);
-    const fname = `profit-${_exportPanel === 'kalk' ? 'kalkulator' : 'validalo'}-${today}.csv`;
+    const suffixMap = { kalk: 'kalkulator', valid: 'validalo', napi: 'napi-profit' };
+    const fname = `profit-${suffixMap[_exportPanel] || 'export'}-${today}.csv`;
     const blob = new Blob([_exportCSV], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1381,6 +1556,240 @@ Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapj
   calcValid();
   renderSavesList('kalk');
   renderSavesList('valid');
+
+  /* ===== PANEL 3: NAPI PROFIT ===== */
+  const NAPI_KEYS = {
+    settings: 'pk_napi_settings',
+    records:  'pk_napi_records',
+    draft:    'pk_napi_draft'
+  };
+  const NAPI_INPUT_IDS   = ['n_adspend','n_eladas','n_rendel','n_units','n_cog'];
+  const NAPI_SETTING_IDS = ['n_retur_pct','n_kuldes','n_retur_dij','n_fix','n_vat'];
+
+  function todayISO() {
+    const d = new Date();
+    const p = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  }
+  function loadNapiSettings() {
+    try { return JSON.parse(localStorage.getItem(NAPI_KEYS.settings) || '{}'); }
+    catch(e) { return {}; }
+  }
+  function persistNapiSettings() {
+    const s = {};
+    NAPI_SETTING_IDS.forEach(id => s[id] = document.getElementById(id).value);
+    localStorage.setItem(NAPI_KEYS.settings, JSON.stringify(s));
+  }
+  function loadNapiRecords() {
+    try { return JSON.parse(localStorage.getItem(NAPI_KEYS.records) || '{}'); }
+    catch(e) { return {}; }
+  }
+  function persistNapiRecords(r) {
+    localStorage.setItem(NAPI_KEYS.records, JSON.stringify(r));
+  }
+  function persistNapiDraft() {
+    const draft = { date: document.getElementById('n_date').value, inputs: {} };
+    NAPI_INPUT_IDS.forEach(id => draft.inputs[id] = document.getElementById(id).value);
+    localStorage.setItem(NAPI_KEYS.draft, JSON.stringify(draft));
+  }
+  function loadNapiDraft() {
+    try { return JSON.parse(localStorage.getItem(NAPI_KEYS.draft) || 'null'); }
+    catch(e) { return null; }
+  }
+
+  function calcNapi() {
+    const adspend  = +document.getElementById('n_adspend').value  || 0;
+    const eladas   = +document.getElementById('n_eladas').value   || 0;
+    const rendel   = +document.getElementById('n_rendel').value   || 0;
+    const units    = +document.getElementById('n_units').value    || 0;
+    const cog      = +document.getElementById('n_cog').value      || 0;
+    const returpct = (+document.getElementById('n_retur_pct').value || 0) / 100;
+    const kuldes   = +document.getElementById('n_kuldes').value   || 0;
+    const returdij = +document.getElementById('n_retur_dij').value || 0;
+    const fix      = +document.getElementById('n_fix').value      || 0;
+    const vat_payer = document.getElementById('n_vat').value === 'yes';
+
+    // COGS bruttó
+    const cogs_gross = cog * units;
+    // A módszer: × (1 − return%)
+    const eladas_eff = eladas * (1 - returpct);
+    const cogs_eff   = cogs_gross * (1 - returpct);
+    // Szállítás összesen
+    const szallitas_alap = kuldes * rendel;
+    const retur_koltseg  = rendel * returpct * returdij;
+    const szallitas_total = szallitas_alap + retur_koltseg;
+    // Fix napi share
+    const fix_napi = fix / 30;
+
+    let pnl, cashflow, vat_pay, available, vat_hint;
+    if (vat_payer) {
+      const VAT = 1.21;
+      const eladas_net    = eladas_eff / VAT;
+      const cogs_net      = cogs_eff / VAT;
+      const szallitas_net = szallitas_total / VAT;
+      const adspend_net   = adspend; // reverse-charge → nincs TVA-hatás
+      const vat_sales      = eladas_eff - eladas_net;
+      const vat_cogs       = cogs_eff - cogs_net;
+      const vat_szallitas  = szallitas_total - szallitas_net;
+      vat_pay = vat_sales - vat_cogs - vat_szallitas;
+      pnl      = eladas_net - szallitas_net - adspend_net - cogs_net;
+      cashflow = eladas_eff - szallitas_total - adspend - cogs_eff;
+      available = cashflow - vat_pay - fix_napi;
+      vat_hint = 'TVA-fizető: cashflow − TVA befizetés − fix költség';
+    } else {
+      const adspend_eff = adspend * 1.21; // non-payer nem tudja levonni
+      pnl       = eladas_eff - szallitas_total - adspend_eff - cogs_eff;
+      cashflow  = pnl;
+      vat_pay   = 0;
+      available = pnl - fix_napi;
+      vat_hint  = 'Nem-TVA-fizető: reklámra +21% felár, nincs TVA-bevallás';
+    }
+    const margin = eladas_eff > 0 ? (available / eladas_eff) * 100 : 0;
+
+    // Output cellák
+    const set = (id, txt, klass) => {
+      const el = document.getElementById(id);
+      el.textContent = txt;
+      if (klass !== undefined) el.className = klass;
+    };
+    set('n_cogs_preview', F(cogs_gross));
+    set('n_o_cogs', F(cogs_gross));
+    set('n_o_eladas_eff', F(eladas_eff));
+    set('n_o_cogs_eff', F(cogs_eff));
+    set('n_o_szallitas', F(szallitas_total));
+    set('n_o_retur_dij', F(retur_koltseg));
+    set('n_o_fix', F(fix_napi));
+    set('n_o_pnl', F(pnl), 'v ' + (pnl > 0 ? 'good' : 'bad'));
+    set('n_o_cashflow', F(cashflow), 'v ' + (cashflow > 0 ? 'good' : 'bad'));
+    set('n_o_vat', F(vat_pay), 'v neutral');
+    set('n_h_available', F(available), 'v ' + (available > 0 ? 'good' : 'bad'));
+    set('n_h_margin', margin.toFixed(1) + '%', 'v ' + (margin > 15 ? 'good' : margin > 0 ? 'neutral' : 'bad'));
+    document.getElementById('n_retur_pct_val').textContent = document.getElementById('n_retur_pct').value + '%';
+    document.getElementById('n_vat_hint').textContent = vat_hint;
+
+    return {
+      cogs_gross, eladas_eff, cogs_eff, szallitas_total, retur_koltseg, fix_napi,
+      pnl, cashflow, vat_pay, available, margin
+    };
+  }
+
+  function saveNapi() {
+    const date = document.getElementById('n_date').value;
+    if (!date) { showToast('⚠️ Válassz dátumot'); return; }
+    const out = calcNapi();
+    const inputs = {}, settings = {};
+    NAPI_INPUT_IDS.forEach(id => inputs[id] = document.getElementById(id).value);
+    NAPI_SETTING_IDS.forEach(id => settings[id] = document.getElementById(id).value);
+    const records = loadNapiRecords();
+    records[date] = { date, inputs, settings, outputs: out };
+    persistNapiRecords(records);
+    persistNapiSettings();
+    renderNapiRecords();
+    showToast('💾 Mentve: ' + date);
+  }
+
+  function loadNapiForDate(date) {
+    const records = loadNapiRecords();
+    const rec = records[date];
+    if (rec) {
+      // Bejegyzés betöltése (csak input mezők — settings már be vannak töltve)
+      Object.entries(rec.inputs).forEach(([k,v]) => {
+        const el = document.getElementById(k);
+        if (el) el.value = v;
+      });
+      // A mentéskor használt settings opcionálisan visszatöltése — DE Szabolcs kérése szerint a beállítások stabilak, NE írjuk felül az aktuálisakat
+    } else {
+      // Nincs mentés — input draft visszatöltése ha ugyanaz a nap
+      const draft = loadNapiDraft();
+      if (draft && draft.date === date && draft.inputs) {
+        Object.entries(draft.inputs).forEach(([k,v]) => {
+          const el = document.getElementById(k);
+          if (el) el.value = v;
+        });
+      } else {
+        // Tiszta lap
+        NAPI_INPUT_IDS.forEach(id => document.getElementById(id).value = 0);
+      }
+    }
+    calcNapi();
+    persistNapiDraft();
+  }
+
+  function deleteNapiRecord(date) {
+    if (!confirm(`Törlöd a(z) ${date} napi mentést?`)) return;
+    const records = loadNapiRecords();
+    delete records[date];
+    persistNapiRecords(records);
+    renderNapiRecords();
+    showToast('🗑 Törölve: ' + date);
+  }
+
+  function renderNapiRecords() {
+    const records = loadNapiRecords();
+    const wrap = document.getElementById('n_records_wrap');
+    const dates = Object.keys(records).sort().reverse();
+    if (!dates.length) {
+      wrap.innerHTML = '<span class="saves-empty">Még nincs mentett nap.</span>';
+      return;
+    }
+    // Összesítő
+    let totProfit = 0, totEladas = 0;
+    dates.forEach(d => { totProfit += (+records[d].outputs.available || 0); totEladas += (+records[d].outputs.eladas_eff || 0); });
+    const totMargin = totEladas > 0 ? (totProfit/totEladas)*100 : 0;
+
+    let html = '<table class="n-records-table"><thead><tr>';
+    html += '<th>Dátum</th><th class="r">Eladás eff.</th><th class="r">P&amp;L</th><th class="r">Elérhető</th><th class="r">Margin</th><th></th>';
+    html += '</tr></thead><tbody>';
+    dates.forEach(d => {
+      const r = records[d];
+      const o = r.outputs;
+      const availCls = (+o.available) > 0 ? 'good' : 'bad';
+      const pnlCls   = (+o.pnl) > 0 ? 'good' : 'bad';
+      html += `<tr>
+        <td><a href="#" class="dlink" onclick="document.getElementById('n_date').value='${d}';loadNapiForDate('${d}');return false">${d}</a></td>
+        <td class="r">${F(+o.eladas_eff)}</td>
+        <td class="r ${pnlCls}">${F(+o.pnl)}</td>
+        <td class="r ${availCls}">${F(+o.available)}</td>
+        <td class="r">${(+o.margin).toFixed(1)}%</td>
+        <td class="r"><span class="delx" onclick="deleteNapiRecord('${d}')" title="Törlés">×</span></td>
+      </tr>`;
+    });
+    html += `<tr style="background:#1a1f27"><td><b>Σ ${dates.length} nap</b></td><td class="r"><b>${F(totEladas)}</b></td><td></td><td class="r ${totProfit>0?'good':'bad'}"><b>${F(totProfit)}</b></td><td class="r"><b>${totMargin.toFixed(1)}%</b></td><td></td></tr>`;
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }
+
+  function resetNapi() {
+    NAPI_INPUT_IDS.forEach(id => document.getElementById(id).value = 0);
+    calcNapi();
+    persistNapiDraft();
+  }
+
+  // Wire up event listeners
+  NAPI_INPUT_IDS.forEach(id => {
+    document.getElementById(id).addEventListener('input', () => { calcNapi(); persistNapiDraft(); });
+  });
+  NAPI_SETTING_IDS.forEach(id => {
+    document.getElementById(id).addEventListener('input', () => { calcNapi(); persistNapiSettings(); });
+  });
+  document.getElementById('n_date').addEventListener('change', () => loadNapiForDate(document.getElementById('n_date').value));
+
+  // Init napi
+  (function initNapi() {
+    // Settings betöltése
+    const settings = loadNapiSettings();
+    Object.entries(settings).forEach(([k,v]) => {
+      const el = document.getElementById(k);
+      if (el && v !== undefined && v !== null && v !== '') el.value = v;
+    });
+    // Dátum: ha van draft mai napra → marad, különben ma
+    const draft = loadNapiDraft();
+    const today = todayISO();
+    const useDate = (draft && draft.date) ? draft.date : today;
+    document.getElementById('n_date').value = useDate;
+    loadNapiForDate(useDate);
+    renderNapiRecords();
+  })();
 </script>
 </body>
 </html>
