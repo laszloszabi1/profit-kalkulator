@@ -753,7 +753,7 @@
   </div>
 
   <div class="action-bar">
-    <button class="action-btn action-save" onclick="saveNapi()">💾 Mentés erre a napra</button>
+    <button class="action-btn action-save" id="n_save_btn" onclick="saveNapi()">💾 Mentés erre a napra</button>
     <button class="action-btn action-export" onclick="openExportModal('napi')">⬇ Export (CSV)</button>
   </div>
 
@@ -1673,6 +1673,19 @@ Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapj
     };
   }
 
+  let _napiViewedRecord = null; // null = új nap módban, string = ezt a saved napot nézzük
+
+  function updateSaveBtn() {
+    const btn = document.getElementById('n_save_btn');
+    if (!btn) return;
+    const date = document.getElementById('n_date').value;
+    if (_napiViewedRecord === date && date) {
+      btn.textContent = '✏️ Felülírás (' + date + ')';
+    } else {
+      btn.textContent = '💾 Mentés erre a napra';
+    }
+  }
+
   function saveNapi() {
     const date = document.getElementById('n_date').value;
     if (!date) { showToast('⚠️ Válassz dátumot'); return; }
@@ -1681,25 +1694,41 @@ Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapj
     NAPI_INPUT_IDS.forEach(id => inputs[id] = document.getElementById(id).value);
     NAPI_SETTING_IDS.forEach(id => settings[id] = document.getElementById(id).value);
     const records = loadNapiRecords();
+    const isOverwrite = !!records[date];
     records[date] = { date, inputs, settings, outputs: out };
     persistNapiRecords(records);
-    persistNapiSettings();
+    // Globális settings csak akkor frissül, ha új-nap módban vagyunk (snapshot-felülírásnál NEM)
+    if (_napiViewedRecord === null) persistNapiSettings();
+    _napiViewedRecord = date;
+    updateSaveBtn();
     renderNapiRecords();
-    showToast('💾 Mentve: ' + date);
+    showToast((isOverwrite ? '✏️ Felülírva: ' : '💾 Mentve: ') + date);
   }
 
   function loadNapiForDate(date) {
     const records = loadNapiRecords();
     const rec = records[date];
     if (rec) {
-      // Bejegyzés betöltése (csak input mezők — settings már be vannak töltve)
+      // SAVED nap → INPUTOK + SETTINGS visszaállítása a snapshot szerint (NEM perzisztálódik globálba)
       Object.entries(rec.inputs).forEach(([k,v]) => {
         const el = document.getElementById(k);
         if (el) el.value = v;
       });
-      // A mentéskor használt settings opcionálisan visszatöltése — DE Szabolcs kérése szerint a beállítások stabilak, NE írjuk felül az aktuálisakat
+      if (rec.settings) {
+        Object.entries(rec.settings).forEach(([k,v]) => {
+          const el = document.getElementById(k);
+          if (el && v !== undefined && v !== null && v !== '') el.value = v;
+        });
+      }
+      _napiViewedRecord = date;
     } else {
-      // Nincs mentés — input draft visszatöltése ha ugyanaz a nap
+      // ÚJ nap (nincs mentés) → globális settings visszaáll
+      const gSettings = loadNapiSettings();
+      Object.entries(gSettings).forEach(([k,v]) => {
+        const el = document.getElementById(k);
+        if (el && v !== undefined && v !== null && v !== '') el.value = v;
+      });
+      // Inputok: draft ha ugyanaz a nap, különben nullák
       const draft = loadNapiDraft();
       if (draft && draft.date === date && draft.inputs) {
         Object.entries(draft.inputs).forEach(([k,v]) => {
@@ -1707,12 +1736,13 @@ Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapj
           if (el) el.value = v;
         });
       } else {
-        // Tiszta lap
         NAPI_INPUT_IDS.forEach(id => document.getElementById(id).value = 0);
       }
+      _napiViewedRecord = null;
     }
     calcNapi();
     persistNapiDraft();
+    updateSaveBtn();
   }
 
   function deleteNapiRecord(date) {
@@ -1770,7 +1800,11 @@ Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapj
     document.getElementById(id).addEventListener('input', () => { calcNapi(); persistNapiDraft(); });
   });
   NAPI_SETTING_IDS.forEach(id => {
-    document.getElementById(id).addEventListener('input', () => { calcNapi(); persistNapiSettings(); });
+    document.getElementById(id).addEventListener('input', () => {
+      calcNapi();
+      // Snapshot-módban (saved napot nézünk) NE írjuk felül a globális settings-et
+      if (_napiViewedRecord === null) persistNapiSettings();
+    });
   });
   document.getElementById('n_date').addEventListener('change', () => loadNapiForDate(document.getElementById('n_date').value));
 
@@ -1789,7 +1823,55 @@ Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapj
     document.getElementById('n_date').value = useDate;
     loadNapiForDate(useDate);
     renderNapiRecords();
+    // URL-hash import (#import=BASE64_JSON)
+    handleNapiImportHash();
   })();
+
+  function handleNapiImportHash() {
+    const hash = window.location.hash || '';
+    const m = hash.match(/^#import=(.+)$/);
+    if (!m) return;
+    let payload;
+    try {
+      // base64 → JSON. atob csak ASCII-t kezel; URL-friendly base64 fordítása
+      const b64 = decodeURIComponent(m[1]).replace(/-/g, '+').replace(/_/g, '/');
+      const json = decodeURIComponent(escape(atob(b64)));
+      payload = JSON.parse(json);
+    } catch (e) {
+      alert('❌ Hibás import-link: ' + e.message);
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      return;
+    }
+    if (!Array.isArray(payload) || payload.length === 0) {
+      alert('❌ Üres vagy hibás import-adat');
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      return;
+    }
+    const existing = loadNapiRecords();
+    const newDates = payload.map(r => r.date).filter(Boolean);
+    const conflicts = newDates.filter(d => existing[d]);
+    const totAv = payload.reduce((s, r) => s + (+((r.outputs && r.outputs.available) || 0)), 0);
+    const msg = `📥 Import: ${payload.length} nap (${newDates[0]} … ${newDates[newDates.length-1]})\n` +
+                `Σ Elérhető: ${totAv.toFixed(2)} RON\n` +
+                (conflicts.length ? `⚠️ ${conflicts.length} ütköző dátum lesz felülírva: ${conflicts.join(', ')}\n` : '') +
+                `\nFolytatod?`;
+    if (!confirm(msg)) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      return;
+    }
+    // Apply
+    payload.forEach(r => { if (r.date) existing[r.date] = r; });
+    persistNapiRecords(existing);
+    renderNapiRecords();
+    // Switch to a sensible date (most recent import)
+    const lastDate = newDates.sort().slice(-1)[0];
+    if (lastDate) {
+      document.getElementById('n_date').value = lastDate;
+      loadNapiForDate(lastDate);
+    }
+    showToast(`✅ ${payload.length} nap importálva`);
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
 </script>
 </body>
 </html>
