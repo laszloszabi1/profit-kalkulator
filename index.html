@@ -1980,40 +1980,75 @@ Ez egy termék Facebook Ads COD-teszt eredménye ${ORSZAG}. A fenti adatok alapj
       return;
     }
     const globalRetur = document.getElementById('n_retur_pct').value;
-    let totProfit = 0, totEladas = 0, totAdspend = 0;
+    const t = { adspend:0, eladas:0, eladas_eff:0, cogs:0, pnl:0, cashflow:0, vat:0, available:0 };
     const recalced = {};
     dates.forEach(d => {
       const o = recalcRecordWithGlobalReturn(records[d]);
       recalced[d] = o;
-      totProfit  += o.available;
-      totEladas  += o.eladas_eff;
-      totAdspend += o.adspend;
+      t.adspend    += o.adspend;
+      t.eladas     += o.eladas;
+      t.eladas_eff += o.eladas_eff;
+      t.cogs       += o.cogs_gross;
+      t.pnl        += o.pnl;
+      t.cashflow   += o.cashflow;
+      t.vat        += o.vat_pay;
+      t.available  += o.available;
     });
     const n = dates.length;
-    const totMargin = totEladas > 0 ? (totProfit/totEladas)*100 : 0;
+    const totMargin = t.eladas_eff > 0 ? (t.available/t.eladas_eff)*100 : 0;
+    const totRoas   = t.adspend > 0 ? t.eladas/t.adspend : 0;
+    const roasCls = r => r >= 2 ? 'good' : r >= 1.5 ? 'neutral' : 'bad';
+    const sign    = v => v > 0 ? 'good' : 'bad';
+    const roasTxt = r => r > 0 ? r.toFixed(2) + '×' : '—';
 
     let html = '<table class="n-records-table"><thead><tr>';
-    html += '<th>Dátum</th><th class="r">Term.</th><th class="r">Eladás eff.</th><th class="r">Adspend</th><th class="r">P&amp;L</th><th class="r">Elérhető</th><th class="r">Margin</th><th></th>';
+    html += '<th>Dátum</th><th class="r">Term.</th><th class="r">Adspend</th><th class="r">Eladás br.</th><th class="r">ROAS</th><th class="r">Eladás eff.</th><th class="r">COGS</th><th class="r">P&amp;L</th><th class="r">CashFlow</th><th class="r">TVA</th><th class="r">Elérhető</th><th class="r">Margin</th><th></th>';
     html += '</tr></thead><tbody>';
     dates.forEach(d => {
       const o = recalced[d];
-      const availCls = o.available > 0 ? 'good' : 'bad';
-      const pnlCls   = o.pnl > 0 ? 'good' : 'bad';
+      const roas = o.adspend > 0 ? o.eladas/o.adspend : 0;
       html += `<tr>
         <td><a href="#" class="dlink" onclick="document.getElementById('n_date').value='${d}';loadNapiForDate('${d}');return false">${d}</a></td>
         <td class="r">${o.product_count}</td>
+        <td class="r neutral">${F(o.adspend)}</td>
+        <td class="r">${F(o.eladas)}</td>
+        <td class="r ${roasCls(roas)}">${roasTxt(roas)}</td>
         <td class="r">${F(o.eladas_eff)}</td>
-        <td class="r">${F(o.adspend)}</td>
-        <td class="r ${pnlCls}">${F(o.pnl)}</td>
-        <td class="r ${availCls}">${F(o.available)}</td>
+        <td class="r">${F(o.cogs_gross)}</td>
+        <td class="r ${sign(o.pnl)}">${F(o.pnl)}</td>
+        <td class="r ${sign(o.cashflow)}">${F(o.cashflow)}</td>
+        <td class="r">${F(o.vat_pay)}</td>
+        <td class="r ${sign(o.available)}">${F(o.available)}</td>
         <td class="r">${o.margin.toFixed(1)}%</td>
         <td class="r"><span class="delx" onclick="deleteNapiRecord('${d}')" title="Törlés">×</span></td>
       </tr>`;
     });
-    html += `<tr style="background:#1a1f27"><td><b>Σ ${n} nap</b></td><td></td><td class="r"><b>${F(totEladas)}</b></td><td class="r"><b>${F(totAdspend)}</b></td><td></td><td class="r ${totProfit>0?'good':'bad'}"><b>${F(totProfit)}</b></td><td class="r"><b>${totMargin.toFixed(1)}%</b></td><td></td></tr>`;
-    html += `<tr><td><b>⌀ átlag/nap</b></td><td></td><td class="r">${F(totEladas/n)}</td><td class="r">${F(totAdspend/n)}</td><td></td><td class="r ${totProfit>0?'good':'bad'}">${F(totProfit/n)}</td><td class="r">${totMargin.toFixed(1)}%</td><td></td></tr>`;
+    html += `<tr style="background:#1a1f27">
+      <td><b>Σ ${n} nap</b></td><td></td>
+      <td class="r"><b>${F(t.adspend)}</b></td>
+      <td class="r"><b>${F(t.eladas)}</b></td>
+      <td class="r ${roasCls(totRoas)}"><b>${roasTxt(totRoas)}</b></td>
+      <td class="r"><b>${F(t.eladas_eff)}</b></td>
+      <td class="r"><b>${F(t.cogs)}</b></td>
+      <td class="r ${sign(t.pnl)}"><b>${F(t.pnl)}</b></td>
+      <td class="r ${sign(t.cashflow)}"><b>${F(t.cashflow)}</b></td>
+      <td class="r"><b>${F(t.vat)}</b></td>
+      <td class="r ${sign(t.available)}"><b>${F(t.available)}</b></td>
+      <td class="r"><b>${totMargin.toFixed(1)}%</b></td><td></td></tr>`;
+    html += `<tr>
+      <td><b>⌀ átlag/nap</b></td><td></td>
+      <td class="r">${F(t.adspend/n)}</td>
+      <td class="r">${F(t.eladas/n)}</td>
+      <td class="r ${roasCls(totRoas)}">${roasTxt(totRoas)}</td>
+      <td class="r">${F(t.eladas_eff/n)}</td>
+      <td class="r">${F(t.cogs/n)}</td>
+      <td class="r ${sign(t.pnl)}">${F(t.pnl/n)}</td>
+      <td class="r ${sign(t.cashflow)}">${F(t.cashflow/n)}</td>
+      <td class="r">${F(t.vat/n)}</td>
+      <td class="r ${sign(t.available)}">${F(t.available/n)}</td>
+      <td class="r">${totMargin.toFixed(1)}%</td><td></td></tr>`;
     html += '</tbody></table>';
-    html += `<div class="hint" style="margin-top:8px">A jelenlegi globális Return % (${globalRetur}%) alapján újraszámol. Minden sor = az adott nap összes termékének összege. Σ = összesen, ⌀ = napi átlag.</div>`;
+    html += `<div class="hint" style="margin-top:8px">A jelenlegi globális Return % (${globalRetur}%) alapján újraszámol. Minden sor = az adott nap összes termékének összege (jobbra görgethető). <b>P&amp;L</b> = könyvelési (nettó) profit · <b>CashFlow</b> = bruttó pénzmozgás · <b>Elérhető</b> = tiszta napi profit (fix költség levonva). Σ = összesen, ⌀ = napi átlag.</div>`;
     wrap.innerHTML = html;
   }
 
