@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Termék-analitika — napi profit</title>
+<style>
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0f1115; color: #e6e8eb; line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  h1 { margin: 0; font-size: 22px; font-weight: 600; }
+  .back { font-size: 13px; color: #8ab4ff; text-decoration: none; font-weight: 600; border: 1px solid #34507e; padding: 7px 12px; border-radius: 7px; background: #1b2030; }
+  .back:hover { background: #1f2740; border-color: #8ab4ff; }
+  .sub { color: #8a8f98; font-size: 13px; margin-bottom: 18px; }
+
+  /* SZŰRŐ-SÁV */
+  .filterbar { background: #14181f; border: 1px solid #252a33; border-radius: 10px; padding: 14px 16px; margin-bottom: 22px; }
+  .filterbar .frow { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; }
+  .preset { font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 8px 12px; border-radius: 8px; background: #1a2027; border: 1px solid #2d333e; color: #8a8f98; }
+  .preset:hover { color: #e6e8eb; border-color: #4a5260; }
+  .preset.active { background: #1b2030; border-color: #8ab4ff; color: #8ab4ff; }
+  .datefield { display: flex; flex-direction: column; gap: 4px; }
+  .datefield label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #8a8f98; font-weight: 600; }
+  .datefield input { padding: 8px 10px; font-size: 15px; background: #0f1115; border: 1px solid #2d333e; color: #e6e8eb; border-radius: 6px; font-family: inherit; -webkit-appearance: none; appearance: none; }
+  .datefield input:focus { outline: none; border-color: #8ab4ff; }
+  .datefield input::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+  .filtersep { width: 1px; align-self: stretch; background: #252a33; margin: 0 4px; }
+  .filtercount { font-size: 12px; color: #8a8f98; margin-left: auto; align-self: center; }
+
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  @media (max-width: 720px) { .summary { grid-template-columns: 1fr 1fr; } }
+  .sumcard { background: #171a21; border: 1px solid #252a33; border-radius: 10px; padding: 14px 16px; }
+  .sumcard .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #8a8f98; }
+  .sumcard .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 4px; }
+
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: #8a8f98; font-weight: 600; margin: 28px 0 12px; }
+  .card { background: #171a21; border: 1px solid #252a33; border-radius: 10px; padding: 20px; }
+
+  table.rank { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  table.rank th { text-align: right; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #8a8f98; font-weight: 600; border-bottom: 1px solid #252a33; white-space: nowrap; }
+  table.rank th:first-child, table.rank th.l { text-align: left; }
+  table.rank td { padding: 11px 12px; border-bottom: 1px dashed #1f242c; text-align: right; white-space: nowrap; }
+  table.rank td.l { text-align: left; font-weight: 600; }
+  table.rank tr:last-child td { border-bottom: 0; }
+  table.rank tr.win td { background: #161d18; }
+  .good { color: #4ade80; } .bad { color: #f87171; } .neutral { color: #ffd66b; }
+  .badge { font-size: 11px; color: #0f1115; background: #ffd66b; border-radius: 5px; padding: 1px 6px; font-weight: 700; margin-left: 6px; }
+
+  .trend { margin-bottom: 16px; }
+  .trend-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .trend-name { font-size: 15px; font-weight: 600; }
+  .trend-meta { font-size: 12px; color: #8a8f98; font-variant-numeric: tabular-nums; }
+  .chart { display: flex; align-items: flex-end; gap: 14px; height: 170px; overflow-x: auto; padding-bottom: 6px; }
+  .chart::-webkit-scrollbar { height: 5px; }
+  .chart::-webkit-scrollbar-thumb { background: #2d333e; border-radius: 3px; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .bars { display: flex; align-items: flex-end; gap: 4px; height: 130px; }
+  .bar { width: 14px; border-radius: 3px 3px 0 0; min-height: 2px; }
+  .bar.eladas { background: #4ade80; }
+  .bar.adspend { background: #ffd66b; }
+  .col .date { font-size: 9px; color: #8a8f98; white-space: nowrap; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: #8a8f98; margin-bottom: 18px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .dot.eladas { background: #4ade80; } .dot.adspend { background: #ffd66b; }
+  .empty { text-align: center; padding: 50px 20px; color: #8a8f98; }
+  .empty a { color: #8ab4ff; }
+  footer { color: #5a6069; font-size: 12px; margin-top: 32px; text-align: center; }
+  @media (max-width: 480px) {
+    body { padding: 12px; }
+    .summary { grid-template-columns: 1fr 1fr; }
+    table.rank { font-size: 12px; }
+    table.rank th, table.rank td { padding: 8px 6px; }
+    .filterbar .frow { gap: 10px; }
+    .datefield { flex: 1; }
+    .filtersep { display: none; }
+    .filtercount { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>📊 Termék-analitika</h1>
+    <a class="back" href="profit-kalkulator.html">← Vissza a napi profithoz</a>
+  </div>
+  <div class="sub" id="subline">Napi profit-napló termékenkénti kimutatása.</div>
+  <div id="content"></div>
+  <footer>Termék-analitika · az adatok a napi profit-naplóból jönnek · csak olvasásra</footer>
+</div>
+
+<script>
+  function fmt(v) {
+    if (!isFinite(v)) return '—';
+    return (Math.round(v * 100) / 100).toLocaleString('hu-HU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' RON';
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function addDays(iso, n) {
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    dt.setUTCDate(dt.getUTCDate() + n);
+    return dt.toISOString().slice(0, 10);
+  }
+  function maxIso(a, b) { return a > b ? a : b; }
+
+  function parsePayload() {
+    const m = (window.location.hash || '').match(/^#data=(.+)$/);
+    if (!m) return null;
+    try {
+      const b64 = decodeURIComponent(m[1]).replace(/-/g, '+').replace(/_/g, '/');
+      const json = decodeURIComponent(escape(atob(b64)));
+      return JSON.parse(json);
+    } catch (e) {
+      return { error: e.message };
+    }
+  }
+  function pageEmpty(msg) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty">${esc(msg)}<br><br><a href="profit-kalkulator.html">← Vissza a napi profithoz</a></div>`;
+  }
+
+  let ALL_DAYS = [], GLOBAL_RETUR = null, MIN_DATE = '', MAX_DATE = '';
+
+  function init() {
+    const payload = parsePayload();
+    if (!payload) { pageEmpty('Nincs átadott adat. Nyisd meg a napi profit fülön a „📊 Termék-analitika" gombbal.'); return; }
+    if (payload.error) { pageEmpty('Hibás adat-link: ' + payload.error); return; }
+    ALL_DAYS = (Array.isArray(payload.days) ? payload.days : []).slice().sort((a, b) => a.date < b.date ? -1 : 1);
+    GLOBAL_RETUR = payload.globalRetur;
+    if (!ALL_DAYS.length) { pageEmpty('Még nincs mentett nap.'); return; }
+    MIN_DATE = ALL_DAYS[0].date;
+    MAX_DATE = ALL_DAYS[ALL_DAYS.length - 1].date;
+
+    document.getElementById('content').innerHTML = filterBarHTML() + '<div id="result"></div>';
+
+    const ds = document.getElementById('d_start');
+    const de = document.getElementById('d_end');
+    ds.min = MIN_DATE; ds.max = MAX_DATE;
+    de.min = MIN_DATE; de.max = MAX_DATE;
+    ds.addEventListener('change', () => { setActivePreset(null); applyFilter(); });
+    de.addEventListener('change', () => { setActivePreset(null); applyFilter(); });
+    document.querySelectorAll('.preset').forEach(btn => {
+      btn.addEventListener('click', () => setPreset(btn.dataset.preset));
+    });
+
+    setPreset('all'); // alapértelmezett: minden nap
+  }
+
+  function filterBarHTML() {
+    return `<div class="filterbar">
+      <div class="frow">
+        <div class="presets">
+          <button class="preset" data-preset="all">Mind</button>
+          <button class="preset" data-preset="7">Utolsó 7 nap</button>
+          <button class="preset" data-preset="30">Utolsó 30 nap</button>
+          <button class="preset" data-preset="month">Ez a hónap</button>
+        </div>
+        <div class="filtersep"></div>
+        <div class="datefield"><label>Kezdő</label><input type="date" id="d_start" /></div>
+        <div class="datefield"><label>Záró</label><input type="date" id="d_end" /></div>
+        <span class="filtercount" id="filtercount"></span>
+      </div>
+    </div>`;
+  }
+
+  function setActivePreset(name) {
+    document.querySelectorAll('.preset').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
+  }
+
+  function setPreset(name) {
+    let start = MIN_DATE, end = MAX_DATE;
+    if (name === '7')     { end = MAX_DATE; start = maxIso(MIN_DATE, addDays(MAX_DATE, -6)); }
+    else if (name === '30') { end = MAX_DATE; start = maxIso(MIN_DATE, addDays(MAX_DATE, -29)); }
+    else if (name === 'month') { end = MAX_DATE; start = maxIso(MIN_DATE, MAX_DATE.slice(0, 7) + '-01'); }
+    document.getElementById('d_start').value = start;
+    document.getElementById('d_end').value = end;
+    setActivePreset(name);
+    applyFilter();
+  }
+
+  function applyFilter() {
+    let s = document.getElementById('d_start').value || MIN_DATE;
+    let e = document.getElementById('d_end').value || MAX_DATE;
+    if (s > e) { const t = s; s = e; e = t; } // ha felcserélve, rendezzük
+    const days = ALL_DAYS.filter(x => x.date >= s && x.date <= e);
+    document.getElementById('filtercount').textContent = `${days.length} / ${ALL_DAYS.length} nap`;
+    render(days, s, e);
+  }
+
+  function render(days, startSel, endSel) {
+    const result = document.getElementById('result');
+    document.getElementById('subline').textContent =
+      `${ALL_DAYS.length} nap összesen (${MIN_DATE} … ${MAX_DATE}) · globális Return ${GLOBAL_RETUR != null ? GLOBAL_RETUR + '%' : '—'}`;
+
+    if (!days.length) {
+      result.innerHTML = `<div class="empty">Nincs adat a kiválasztott időszakban (${esc(startSel)} … ${esc(endSel)}).<br>Válassz tágabb intervallumot.</div>`;
+      return;
+    }
+
+    // termékenkénti összesítés (név szerint, a szűrt napokon át)
+    const map = new Map();
+    days.forEach(day => {
+      (day.products || []).forEach(p => {
+        if (!map.has(p.name)) map.set(p.name, { name: p.name, eladas:0, eladas_eff:0, adspend:0, pnl:0, rendel:0, units:0, days: [] });
+        const m = map.get(p.name);
+        m.eladas += p.eladas; m.eladas_eff += p.eladas_eff; m.adspend += p.adspend;
+        m.pnl += p.pnl; m.rendel += p.rendel; m.units += p.units;
+        m.days.push({ date: day.date, eladas: p.eladas, adspend: p.adspend });
+      });
+    });
+    const products = [...map.values()].map(m => ({
+      ...m,
+      roas: m.adspend > 0 ? m.eladas / m.adspend : 0,
+      poas: m.adspend > 0 ? m.pnl / m.adspend : 0,
+      margin: m.eladas_eff > 0 ? (m.pnl / m.eladas_eff) * 100 : 0,
+      count: m.days.length
+    })).sort((a, b) => b.pnl - a.pnl);
+
+    const totAvailable = days.reduce((s, d) => s + ((d.day && d.day.available) || 0), 0);
+    const totEladas    = days.reduce((s, d) => s + ((d.day && d.day.eladas) || 0), 0);
+    const totAdspend   = days.reduce((s, d) => s + ((d.day && d.day.adspend) || 0), 0);
+    const range = days.length > 1 ? `${days[0].date} … ${days[days.length-1].date}` : days[0].date;
+
+    let html = '';
+
+    // ÖSSZEGZŐ KÁRTYÁK
+    html += '<div class="summary">';
+    html += `<div class="sumcard"><div class="k">Időszak</div><div class="v" style="font-size:15px">${esc(range)}</div></div>`;
+    html += `<div class="sumcard"><div class="k">Σ Eladás <small style="color:#5a6069">(${days.length} nap)</small></div><div class="v">${fmt(totEladas)}</div></div>`;
+    html += `<div class="sumcard"><div class="k">Σ Adspend</div><div class="v neutral">${fmt(totAdspend)}</div></div>`;
+    html += `<div class="sumcard"><div class="k">Σ Elérhető <small style="color:#5a6069">(fix-szel)</small></div><div class="v ${totAvailable>0?'good':'bad'}">${fmt(totAvailable)}</div></div>`;
+    html += '</div>';
+
+    // RANGSOR
+    html += '<h2>🏆 Termék-rangsor <small style="text-transform:none;letter-spacing:0;color:#5a6069;font-weight:400">— profit szerint (havi fix költség nélkül, az közös)</small></h2>';
+    html += '<div class="card"><table class="rank"><thead><tr>';
+    html += '<th class="l">#</th><th class="l">Termék</th><th>Profit</th><th>ROAS</th><th>POAS</th><th>Margin</th><th>Eladás</th><th>Adspend</th><th>Napok</th>';
+    html += '</tr></thead><tbody>';
+    products.forEach((p, i) => {
+      const win = i === 0 && p.pnl > 0;
+      html += `<tr class="${win ? 'win' : ''}">
+        <td class="l">${i + 1}.</td>
+        <td class="l">${esc(p.name)}${win ? '<span class="badge">🥇 nyerő</span>' : ''}</td>
+        <td class="${p.pnl > 0 ? 'good' : 'bad'}">${fmt(p.pnl)}</td>
+        <td class="${p.roas >= 2 ? 'good' : p.roas >= 1 ? 'neutral' : 'bad'}">${p.roas.toFixed(2)}×</td>
+        <td class="${p.poas >= 1 ? 'good' : p.poas > 0 ? 'neutral' : 'bad'}">${p.poas.toFixed(2)}×</td>
+        <td>${p.margin.toFixed(1)}%</td>
+        <td>${fmt(p.eladas)}</td>
+        <td class="neutral">${fmt(p.adspend)}</td>
+        <td>${p.count}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+
+    // TREND
+    html += '<h2>📈 Eladás vs adspend — napról napra</h2>';
+    html += '<div class="legend"><span><span class="dot eladas"></span> Eladás</span><span><span class="dot adspend"></span> Adspend</span></div>';
+    products.forEach(p => {
+      const sorted = [...p.days].sort((a, b) => a.date < b.date ? -1 : 1);
+      const max = Math.max(1, ...sorted.map(d => Math.max(d.eladas, d.adspend)));
+      html += '<div class="card trend">';
+      html += `<div class="trend-head"><span class="trend-name">${esc(p.name)}</span><span class="trend-meta">ROAS ${p.roas.toFixed(2)}× · Profit ${fmt(p.pnl)}</span></div>`;
+      html += '<div class="chart">';
+      sorted.forEach(d => {
+        const he = Math.round((d.eladas / max) * 130);
+        const ha = Math.round((d.adspend / max) * 130);
+        html += `<div class="col">
+          <div class="bars">
+            <div class="bar eladas" style="height:${he}px" title="Eladás ${fmt(d.eladas)}"></div>
+            <div class="bar adspend" style="height:${ha}px" title="Adspend ${fmt(d.adspend)}"></div>
+          </div>
+          <div class="date">${esc(d.date.slice(5))}</div>
+        </div>`;
+      });
+      html += '</div></div>';
+    });
+
+    result.innerHTML = html;
+  }
+
+  init();
+  window.addEventListener('hashchange', init);
+</script>
+</body>
+</html>
