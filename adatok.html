@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Adat-ellenőrző — napi profit</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:18px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#0f1115; color:#e6e8eb; line-height:1.5; }
+  h1 { font-size:19px; margin:0 0 4px; }
+  .sub { color:#8a8f98; font-size:13px; margin-bottom:18px; }
+  .card { background:#171a21; border:1px solid #252a33; border-radius:10px; padding:16px; margin-bottom:14px; }
+  .big { font-size:30px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .good { color:#4ade80; } .bad { color:#f87171; } .neutral { color:#ffd66b; }
+  .k { color:#8a8f98; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; font-size:13px; margin-top:8px; }
+  th,td { text-align:right; padding:7px 8px; border-bottom:1px dashed #1f242c; white-space:nowrap; }
+  th:first-child, td:first-child { text-align:left; }
+  th { color:#8a8f98; font-size:11px; text-transform:uppercase; }
+  textarea { width:100%; height:130px; background:#0f1115; border:1px solid #2d333e; color:#e6e8eb; border-radius:8px; padding:10px; font-family:monospace; font-size:11px; margin-top:8px; }
+  button { font-family:inherit; font-size:15px; font-weight:700; padding:14px 18px; border-radius:10px; cursor:pointer; width:100%; margin-top:10px; background:#ffd66b; color:#0f1115; border:0; }
+  .keys { font-family:monospace; font-size:12px; color:#8ab4ff; word-break:break-all; }
+  .empty { color:#f87171; font-weight:700; }
+  .ok { color:#4ade80; font-weight:700; }
+</style>
+</head>
+<body>
+  <h1>🔎 Adat-ellenőrző</h1>
+  <div class="sub" id="origin"></div>
+  <div id="out"></div>
+  <script>
+    const out = document.getElementById('out');
+    document.getElementById('origin').textContent = 'Cím (origin): ' + location.origin;
+
+    function num(v){ return (Math.round((+v||0)*100)/100); }
+
+    let html = '';
+    // 1) Van-e egyáltalán napi-rekord ezen a címen?
+    let recsRaw = localStorage.getItem('pk_napi_records');
+    let recs = null;
+    try { recs = recsRaw ? JSON.parse(recsRaw) : null; } catch(e) { recs = 'HIBÁS'; }
+
+    if (!recsRaw) {
+      html += `<div class="card"><div class="empty">❌ EZEN A CÍMEN NINCS mentett napi adat (pk_napi_records hiányzik).</div>
+        <div class="sub" style="margin-top:8px">Az adatod egy MÁSIK címen/eszközön van. Nyisd meg a régi linket/ikont, és ott futtasd ezt az oldalt.</div></div>`;
+    } else if (recs === 'HIBÁS') {
+      html += `<div class="card"><div class="bad">⚠️ A mentett adat sérült (nem olvasható JSON).</div></div>`;
+    } else {
+      const dates = Object.keys(recs).sort();
+      let sumAdspend = 0, sumEladas = 0;
+      const rows = dates.map(d => {
+        const r = recs[d];
+        // új formátum (products) VAGY régi (inputs)
+        let adspend = 0, eladas = 0, prods = 0;
+        if (Array.isArray(r.products)) {
+          r.products.forEach(p => { adspend += +p.n_adspend||0; eladas += +p.n_eladas||0; if((p.name||'').trim()|| (+p.n_adspend||0)||(+p.n_eladas||0)) prods++; });
+        } else if (r.inputs) {
+          adspend = +r.inputs.n_adspend||0; eladas = +r.inputs.n_eladas||0; prods = 1;
+        }
+        sumAdspend += adspend; sumEladas += eladas;
+        return `<tr><td>${d}</td><td>${prods}</td><td>${num(adspend)}</td><td>${num(eladas)}</td></tr>`;
+      }).join('');
+      html += `<div class="card"><div class="k">Mentett napok ezen a címen</div><div class="big ok">${dates.length} nap</div></div>`;
+      html += `<div class="card"><div class="k">Σ Adspend (összes nap)</div><div class="big neutral">${num(sumAdspend)} RON</div>
+        <div class="k" style="margin-top:10px">Σ Eladás bruttó</div><div class="big">${num(sumEladas)} RON</div></div>`;
+      html += `<div class="card"><div class="k">Napok részletei</div>
+        <table><thead><tr><th>Dátum</th><th>Term.</th><th>Adspend</th><th>Eladás</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
+
+    // 2) Minden localStorage kulcs (mi van még a böngészőben ezen a címen)
+    const allKeys = Object.keys(localStorage);
+    html += `<div class="card"><div class="k">Összes tárolt kulcs ezen a címen (${allKeys.length})</div>
+      <div class="keys">${allKeys.map(k=>k).join(' · ') || '(üres)'}</div></div>`;
+
+    // 3) Nyers adat kimásolásra
+    const dump = JSON.stringify({
+      origin: location.origin,
+      pk_napi_records: recsRaw ? JSON.parse(recsRaw) : null,
+      pk_napi_settings: localStorage.getItem('pk_napi_settings') ? JSON.parse(localStorage.getItem('pk_napi_settings')) : null,
+      pk_napi_draft: localStorage.getItem('pk_napi_draft') ? JSON.parse(localStorage.getItem('pk_napi_draft')) : null
+    }, null, 0);
+    html += `<div class="card"><div class="k">Nyers adat (küldd át nekem ezt)</div>
+      <textarea id="dump" readonly>${dump.replace(/</g,'&lt;')}</textarea>
+      <button onclick="(function(){var t=document.getElementById('dump');t.select();try{document.execCommand('copy');}catch(e){}; if(navigator.clipboard)navigator.clipboard.writeText(t.value); this.textContent='✅ Kimásolva — illeszd be a chatbe';}).call(this)">📋 Másold ki az adatot</button></div>`;
+
+    out.innerHTML = html;
+  </script>
+</body>
+</html>
